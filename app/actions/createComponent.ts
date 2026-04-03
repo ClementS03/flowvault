@@ -33,6 +33,7 @@ export async function createComponent(
 
   if (!name) throw new Error('Component name is required');
   if (name.length > 60) throw new Error('Name must be 60 characters or less');
+  if (description && description.length > 200) throw new Error('Description must be 200 characters or less');
 
   // Validate Webflow JSON — split so inner parse error isn't swallowed by type check
   let parsed: unknown;
@@ -66,6 +67,9 @@ export async function createComponent(
   let imagePath: string | null = null;
 
   if (imageFile && imageFile.size > 0) {
+    if (!['image/jpeg', 'image/png'].includes(imageFile.type)) {
+      throw new Error('Preview image must be a JPEG or PNG file');
+    }
     if (imageFile.size > 2 * 1024 * 1024) {
       throw new Error('Preview image must be under 2MB');
     }
