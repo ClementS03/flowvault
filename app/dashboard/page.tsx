@@ -49,9 +49,9 @@ export default async function DashboardPage() {
   const progressPercent = isFree ? Math.min((componentCount / 10) * 100, 100) : 100;
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="mx-auto px-[var(--px-site)] py-16" style={{ maxWidth: 'var(--max-width)' }}>
+      <main className="flex-1 mx-auto w-full px-[var(--px-site)] py-16" style={{ maxWidth: 'var(--max-width)' }}>
         {/* Header row */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-heading text-3xl font-bold text-ink">My library</h1>
@@ -130,6 +130,6 @@ export default async function DashboardPage() {
         )}
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
