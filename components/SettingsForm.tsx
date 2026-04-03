@@ -1,0 +1,210 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import toast from 'react-hot-toast';
+import { updateProfile } from '@/app/actions/updateProfile';
+
+interface SettingsFormProps {
+  userId: string;
+  email: string;
+  plan: string;
+  initialDisplayName: string;
+  initialUsername: string;
+  initialBio: string;
+  initialWebsite: string;
+  avatarUrl: string | null;
+}
+
+export default function SettingsForm({
+  email,
+  plan,
+  initialDisplayName,
+  initialUsername,
+  initialBio,
+  initialWebsite,
+  avatarUrl,
+}: SettingsFormProps) {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+  const [isPending, startTransition] = useTransition();
+
+  const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [username, setUsername] = useState(initialUsername);
+  const [bio, setBio] = useState(initialBio);
+  const [website, setWebsite] = useState(initialWebsite);
+  const usernameChanged = username !== initialUsername && initialUsername !== '';
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push('/');
+    router.refresh();
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      const result = await updateProfile(formData);
+      if ('error' in result) {
+        toast.error(result.error);
+      } else {
+        toast.success('Profile saved!');
+        router.refresh();
+      }
+    });
+  }
+
+  const initials = (displayName || email).charAt(0).toUpperCase();
+
+  return (
+    <div className="flex flex-col gap-6 max-w-xl">
+      {/* Profile section */}
+      <div className="rounded-xl border border-border bg-white p-6">
+        <h2 className="font-heading font-semibold text-ink mb-6">Profile</h2>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {/* Avatar (read-only) */}
+          <div className="flex items-center gap-4">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={displayName || email}
+                className="w-16 h-16 rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-xl">
+                {initials}
+              </div>
+            )}
+            <p className="text-xs text-ink-3">Avatar is set from your Google account.</p>
+          </div>
+
+          {/* Display name */}
+          <div>
+            <label htmlFor="display_name" className="block text-sm font-medium text-ink mb-1.5">
+              Display name
+            </label>
+            <input
+              id="display_name"
+              name="display_name"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={50}
+              placeholder="Your name"
+              className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+            />
+            <p className="text-xs text-ink-3 mt-1">{displayName.length} / 50</p>
+          </div>
+
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-ink mb-1.5">
+              Username
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+              maxLength={30}
+              placeholder="your-username"
+              className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+            />
+            <p className="text-xs text-ink-3 mt-1">
+              flowvault.io/u/{username || 'your-username'}
+            </p>
+            {usernameChanged && (
+              <p className="text-xs text-amber-600 mt-1">
+                Changing your username will break existing links to your profile.
+              </p>
+            )}
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label htmlFor="bio" className="block text-sm font-medium text-ink mb-1.5">
+              Bio <span className="text-ink-3 font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={160}
+              rows={3}
+              placeholder="Tell the community about yourself…"
+              className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors resize-none"
+            />
+            <p className="text-xs text-ink-3 mt-1">{bio.length} / 160</p>
+          </div>
+
+          {/* Website */}
+          <div>
+            <label htmlFor="website" className="block text-sm font-medium text-ink mb-1.5">
+              Website <span className="text-ink-3 font-normal">(optional)</span>
+            </label>
+            <input
+              id="website"
+              name="website"
+              type="text"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://yoursite.com"
+              className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+            />
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-2 rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-2 text-sm transition-colors disabled:opacity-50"
+            >
+              {isPending ? 'Saving…' : 'Save changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Account section */}
+      <div className="rounded-xl border border-border bg-white p-6">
+        <h2 className="font-heading font-semibold text-ink mb-6">Account</h2>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-ink-2">Email</span>
+            <span className="text-sm text-ink font-medium">{email}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-ink-2">Plan</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-ink capitalize">{plan}</span>
+              {plan === 'free' && (
+                <a href="/pricing" className="text-xs text-accent hover:text-accent-h font-medium transition-colors">
+                  Upgrade →
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-border flex justify-end">
+            <button
+              onClick={handleSignOut}
+              className="text-sm font-medium text-ink-2 hover:text-red-600 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
