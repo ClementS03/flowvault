@@ -1,6 +1,7 @@
 # FlowVault — Plan des prochaines phases
 
 > **État au 2026-04-04** — MVP complet déployé sur https://flowvault-ten.vercel.app/
+> **Dernière mise à jour :** 2026-04-04
 
 ---
 
@@ -13,43 +14,77 @@
 - `/c/[slug]` : page publique + Copy to Webflow + auteur + "More from @user" + PasswordGate
 - `/browse` : marketplace avec filtres catégorie/tag + cards riches avec auteur
 - `/u/[username]` : profil public avec composants + avatar + stats
-- Landing page : hero + stats live + how it works + bottom CTA
+- Landing page : hero + how it works + bottom CTA (statique)
 - Sécurité : access control, password hash, signed URLs, defense-in-depth
 
 ---
 
-## Phase 2 — Social & Discovery
+## Phase 3 — Stripe Pro *(priorité suivante)*
 
-### 2a — Recherche full-text *(priorité haute)*
+ShipFast a déjà tout câblé (checkout, webhook, portail). Ce qui reste :
 
-**Pourquoi :** Les filtres actuels (catégorie + tag exact) sont limités. La recherche textuelle sur le nom/description est attendue.
+**Config `config.ts` :**
+- Mettre à jour les `priceId` Stripe (mensuel/annuel)
+- Adapter les plans Free/Pro aux limites FlowVault
 
-**Fichiers à toucher :**
-- `app/browse/page.tsx` — ajouter le paramètre `q` (searchParams)
-- `app/browse/BrowseFilters.tsx` — ajouter un champ de recherche
-- Supabase : activer `pg_trgm` + index GIN ou utiliser `.ilike()` sur name + description
+**Vérifier le webhook** `app/api/webhook/stripe/route.ts` :
+- Sur `checkout.session.completed` → `profiles.plan = 'pro'` ✅ (déjà présent ShipFast)
+- Sur `customer.subscription.deleted` → repasser `plan = 'free'` (vérifier que c'est géré)
 
-**Implémentation Supabase :**
-```sql
--- Option simple (ilike, pas besoin d'extension) :
-.or(`name.ilike.%${q}%,description.ilike.%${q}%`)
+**Page pricing** `app/pricing/page.tsx` :
+- Adapter le contenu ShipFast au pricing FlowVault
+- Free : 10 composants stockés / Pro : illimité
 
--- Option avancée (full-text search) :
-ALTER TABLE components ADD COLUMN search_vector tsvector;
--- Trigger pour maintenir le vecteur automatiquement
-```
+**Enforcement** :
+- Limite 10 composants déjà active dans `createComponent` ✅
+- Bouton "Upgrade" dans le dashboard quand la limite est atteinte (à ajouter)
 
-**UX :** Barre de recherche dans le header de Browse, au-dessus des filtres catégorie.
+**Plans :**
+| | Free | Pro |
+|---|---|---|
+| Composants stockés | 10 | Illimité |
+| Copies reçues | ∞ | ∞ |
+| Composants publics | ∞ | ∞ |
 
 ---
 
-### 2b — Social Graph (follow/unfollow + saves) *(à brainstormer)*
+## Pages légales *(à faire avant ou en même temps que Stripe)*
 
-**Pourquoi :** Créer de l'engagement et fidéliser les créateurs. Les "saves" permettent aux users de constituer leur bibliothèque de composants favoris.
+**Obligatoires en France (entreprise) :**
 
-**Tables DB à créer :**
+| Page | Obligatoire | Contenu clé |
+|---|---|---|
+| `/legal/mentions-legales` | ✅ Loi française | Éditeur, hébergeur, SIRET, siège social |
+| `/legal/privacy` | ✅ RGPD | Données collectées, finalités, durée conservation, droits utilisateurs |
+| `/legal/terms` | ✅ si vente (Stripe) | CGU + CGV, conditions d'abonnement, remboursements |
+| `/legal/cookies` | ✅ CNIL | Types de cookies, consentement |
+
+**Implémentation :**
+- Pages statiques simples sous `app/legal/[page]/page.tsx` ou fichiers séparés
+- Liens dans le Footer (à ajouter)
+- Bandeau cookies si analytics/tracking (pas urgent si pas encore de tracking)
+
+**Note :** Le contenu juridique est à rédiger par toi (ou un avocat) — je peux générer des templates mais ils ne constituent pas un conseil juridique.
+
+---
+
+## Phase 4 — Acquisition
+
+Pas de code — actions marketing :
+
+- **Product Hunt** : lancement une fois le Stripe en place
+- **Communautés Webflow** : Webflow Forum, Reddit r/webflow, Discord Webflow
+- **Twitter/X** : partager des composants, montrer le workflow
+- **YouTube** : demo "Comment partager un composant Webflow en 30 secondes"
+
+---
+
+## Phase 2b — Social Graph *(après acquisition)*
+
+À faire quand t'as des utilisateurs actifs. Sans audience, follow/save ne servent à rien.
+
+**Tables DB à créer (quand le moment vient) :**
 ```sql
--- Follows
 CREATE TABLE public.follows (
   follower_id uuid references auth.users NOT NULL,
   following_id uuid references auth.users NOT NULL,
@@ -57,7 +92,6 @@ CREATE TABLE public.follows (
   PRIMARY KEY (follower_id, following_id)
 );
 
--- Saves (composants favoris)
 CREATE TABLE public.saves (
   user_id uuid references auth.users NOT NULL,
   component_id uuid references public.components NOT NULL,
@@ -66,90 +100,33 @@ CREATE TABLE public.saves (
 );
 ```
 
-**Fichiers à créer :**
-- `app/actions/followUser.ts` — follow/unfollow toggle
-- `app/actions/saveComponent.ts` — save/unsave toggle
-- `components/FollowButton.tsx` — bouton follow sur `/u/[username]`
-- `components/SaveButton.tsx` — bouton save sur `/c/[slug]`
-- `app/dashboard/saved/page.tsx` — onglet "Saved" dans le dashboard
+**Features :**
+- Bouton Follow sur `/u/[username]`
+- Bouton Save (cœur) sur `/c/[slug]`
+- Onglet "Saved" dans le dashboard
+- Feed "Following" dans le dashboard
 
-**Affectations UI :**
-- `/u/[username]` : bouton Follow + compteurs followers/following
-- `/c/[slug]` : bouton Save (cœur) + compteur saves
-- Dashboard : onglet "Saved" listant les composants sauvegardés
-
-**Note :** À brainstormer avec le skill `brainstorming` avant d'implémenter — il y a des questions de vie privée (profils privés vs publics, visibilité des follows).
+**→ Brainstormer avec `/brainstorming` avant d'implémenter.**
 
 ---
 
-### 2c — Trending / Sort options *(priorité moyenne)*
+## Phase 2a — Recherche full-text *(déprioritisée)*
 
-**Pourquoi :** "Les plus populaires" c'est bien, mais "les plus récents" ou "trending cette semaine" donnent de la diversité.
-
-**Implémentation :**
-- Ajouter `sort` dans les searchParams de Browse (`newest`, `popular`, `trending`)
-- `BrowseFilters.tsx` : select ou pills de tri
-- "Trending" = copy_count des 7 derniers jours → nécessite un champ `copies.copied_at` (déjà prévu dans le schéma)
+Les filtres catégorie + tag suffisent pour le MVP. À faire si les utilisateurs le demandent.
 
 ---
 
-## Phase 3 — Stripe Pro *(après social graph)*
+## Phase 5 — Polish & Growth *(futur)*
 
-**Pourquoi :** Monétisation. Le freemium est en place (limite 10 composants), Stripe est déjà câblé par ShipFast.
-
-**Ce qui reste à faire :**
-- Configurer les `price IDs` Stripe dans `config.ts`
-- Vérifier le webhook Stripe → `profiles.plan = 'pro'` (logique déjà présente dans ShipFast)
-- Enforcement en prod : la limite 10 est déjà active dans `createComponent`
-- Page pricing : adapter la page ShipFast aux plans FlowVault
-- Portail facturation : ShipFast fournit `/api/stripe/create-portal-link`
-
-**Plans envisagés :**
-| | Free | Pro |
-|---|---|---|
-| Composants stockés | 10 | Illimité |
-| Copies reçues | Illimitées | Illimitées |
-| Composants publics | Illimités | Illimités |
+- Analytics créateur (vues, copies par composant)
+- Collections de composants
+- Embed widget `<iframe>`
+- Preview visuelle (Phase 6 — R&D XscpData → HTML, très complexe)
 
 ---
 
-## Phase 4 — Polish & Growth
+## Dettes techniques — TOUTES RÉSOLUES ✅
 
-### Analytics créateur
-- Sur `/u/[username]` et le dashboard : vues, copies par composant, évolution dans le temps
-- Utiliser la table `copies` (déjà créée) pour les stats
-
-### Preview visuelle des composants
-- **Non faisable** sans R&D significative : XscpData → HTML nécessite de réimplémenter le renderer Webflow (comme moden.io). Projet Phase 6.
-- Alternative court terme : encourager l'upload d'une image de preview (déjà en place)
-
-### Collections
-- Grouper plusieurs composants dans une collection (ex: "Landing page kit")
-- Table `collections` + `collection_components`
-
-### Embed widget
-- `<iframe src="flowvault.io/embed/c/[slug]">` avec juste le bouton Copy
-
----
-
-## Phase 6 — Convertisseur HTML/CSS/JS → Webflow *(futur lointain)*
-
-Voir `CLAUDE.md` section Phase 6. Nécessite une R&D approfondie sur le format XscpData.
-
----
-
-## Prochaine action recommandée
-
-**Phase 2b — Social Graph** avec `/brainstorming` avant d'implémenter (questions de vie privée, UX à valider).
-Ou **Phase 3 — Stripe Pro** si la monétisation est prioritaire.
-
-**Phase 2a (recherche full-text)** : déprioritisée — les filtres catégorie + tag suffisent pour le MVP. À faire plus tard si les utilisateurs le demandent.
-
----
-
-## Dettes techniques — RÉSOLUES ✅
-
-- ~~Browse "Something went wrong"~~ → DB complète, browse fonctionne en prod ✅
-- ~~Admin plan 'pro'~~ → fait manuellement dans Supabase ✅
-- ~~Colonnes is_temporary / expires_at / password_hash~~ → existent en prod ✅
-- ~~Table copies~~ → existe en prod (stats home affichées) ✅
+- DB complète, browse fonctionne en prod ✅
+- Admin plan 'pro' ✅
+- Home page statique sans stats ✅
