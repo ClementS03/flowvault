@@ -77,7 +77,18 @@ export default function UploadSlideOver({ json, onClose }: Props) {
       }
 
       const { slug } = await createComponent(formData, json);
-      router.push(isLoggedIn ? `/c/${slug}` : `/upload/result?slug=${slug}`);
+      if (isLoggedIn) {
+        // Copy share link to clipboard silently, then go to library
+        try {
+          await navigator.clipboard.writeText(`${window.location.origin}/c/${slug}`);
+          toast.success('Component published! Share link copied.');
+        } catch {
+          toast.success('Component published!');
+        }
+        router.push('/dashboard');
+      } else {
+        router.push(`/upload/result?slug=${slug}`);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       toast.error(message);

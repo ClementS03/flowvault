@@ -2,9 +2,12 @@
 
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { slugify } from '@/libs/slugify';
 import { hashPassword } from '@/libs/hashPassword';
 import supabaseAdmin from '@/libs/supabaseAdmin';
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
 
 export async function createComponent(
   formData: FormData,
@@ -55,7 +58,8 @@ export async function createComponent(
       .eq('id', userId)
       .single();
 
-    if (profile?.plan === 'free' && (profile?.component_count ?? 0) >= 10) {
+    const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
+    if (!isAdmin && profile?.plan === 'free' && (profile?.component_count ?? 0) >= 10) {
       throw new Error('Free plan limit reached. Upgrade to Pro for unlimited components.');
     }
     currentComponentCount = profile?.component_count ?? 0;
@@ -162,6 +166,8 @@ export async function createComponent(
       .update({ component_count: currentComponentCount + 1 })
       .eq('id', userId);
   }
+
+  revalidatePath('/dashboard');
 
   return { slug };
 }
