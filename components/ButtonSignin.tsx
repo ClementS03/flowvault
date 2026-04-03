@@ -52,7 +52,7 @@ const ButtonSignin = ({
             {firstName.charAt(0).toUpperCase()}
           </span>
         )}
-        <span className="text-sm font-medium text-ink truncate max-w-[100px]">{firstName}</span>
+        <span className="text-sm font-medium truncate max-w-[100px]">{firstName}</span>
       </Link>
     );
   }
