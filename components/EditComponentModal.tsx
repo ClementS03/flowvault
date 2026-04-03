@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { updateComponent } from '@/app/actions/updateComponent';
@@ -48,6 +48,7 @@ export default function EditComponentModal({
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const blobUrlRef = useRef<string | null>(null);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -60,9 +61,15 @@ export default function EditComponentModal({
       toast.error('File too large. Max 2 MB.');
       return;
     }
+    // Revoke previous blob URL before creating a new one
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+    }
+    const blobUrl = URL.createObjectURL(file);
+    blobUrlRef.current = blobUrl;
     setNewImageFile(file);
     setRemoveImage(false);
-    setPreviewImageUrl(URL.createObjectURL(file));
+    setPreviewImageUrl(blobUrl);
   }
 
   function handleRemoveImage() {
@@ -71,6 +78,15 @@ export default function EditComponentModal({
     setPreviewImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
+
+  // Revoke blob URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+      }
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,12 +122,13 @@ export default function EditComponentModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-lg bg-bg rounded-2xl shadow-2xl overflow-hidden">
+      <div role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" className="w-full max-w-lg bg-bg rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="font-heading font-bold text-ink text-lg">Edit component</h2>
+          <h2 id="edit-modal-title" className="font-heading font-bold text-ink text-lg">Edit component</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="p-1.5 rounded-lg hover:bg-surface text-ink-3 hover:text-ink transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
