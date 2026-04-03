@@ -32,7 +32,7 @@ export default async function BrowsePage({ searchParams }: Props) {
   const list = components ?? [];
 
   // 2. Fetch profiles for the authors
-  const userIds = [...new Set(list.map((c) => c.user_id).filter(Boolean))];
+  const userIds = Array.from(new Set(list.map((c) => c.user_id).filter(Boolean)));
   const profileMap: Record<string, { username: string | null; display_name: string | null; avatar_url: string | null }> = {};
 
   if (userIds.length > 0) {
