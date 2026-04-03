@@ -47,7 +47,7 @@ export default function AvatarUpload({
 
     const { error: storageError } = await supabase.storage
       .from('avatars')
-      .upload(path, file, { upsert: true });
+      .upload(path, file, { upsert: true, contentType: file.type });
 
     if (storageError) {
       setUploadError('Upload failed. Please try again.');
