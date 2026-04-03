@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { deleteComponent } from '@/app/actions/deleteComponent';
@@ -30,6 +30,15 @@ export default function ComponentRow({
 }: ComponentRowProps) {
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [cachedJson, setCachedJson] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!signedJsonUrl) return;
+    fetch(signedJsonUrl)
+      .then((r) => r.text())
+      .then(setCachedJson)
+      .catch(() => {}); // non-fatal, handled at click time
+  }, [signedJsonUrl]);
 
   async function handleCopyLink() {
     const shareUrl = `${window.location.origin}/c/${slug}`;
@@ -42,22 +51,21 @@ export default function ComponentRow({
   }
 
   function handleCopyToWebflow() {
+    if (!cachedJson) {
+      toast.error('Component data not ready. Please try again.');
+      return;
+    }
     const bridge = document.getElementById('clipboard-bridge') as HTMLTextAreaElement | null;
     if (!bridge) {
       toast.error('Clipboard bridge not found.');
       return;
     }
-    fetch(signedJsonUrl)
-      .then((r) => r.text())
-      .then((json) => {
-        const success = copyToWebflow(json, bridge);
-        if (success) {
-          toast.success('Copied! Paste in Webflow Designer (Ctrl+V)');
-        } else {
-          toast.error('Copy failed.');
-        }
-      })
-      .catch(() => toast.error('Failed to load component data.'));
+    const success = copyToWebflow(cachedJson, bridge);
+    if (success) {
+      toast.success('Copied! Paste in Webflow Designer (Ctrl+V)');
+    } else {
+      toast.error('Copy failed.');
+    }
   }
 
   async function handleTogglePublic() {

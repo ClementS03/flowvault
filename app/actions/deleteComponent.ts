@@ -50,10 +50,13 @@ export async function deleteComponent(id: string): Promise<void> {
     .single();
 
   if (profile && profile.component_count > 0) {
-    await supabaseAdmin
+    const { error: decrementError } = await supabaseAdmin
       .from('profiles')
       .update({ component_count: profile.component_count - 1 })
       .eq('id', session.user.id);
+    if (decrementError) {
+      console.error('[deleteComponent] Failed to decrement component_count:', decrementError.message);
+    }
   }
 
   // 5. Revalidate
