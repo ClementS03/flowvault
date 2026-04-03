@@ -15,7 +15,11 @@ export async function GET(req: NextRequest) {
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
-    const { data } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error('[auth/callback] exchangeCodeForSession error:', error.message);
+    }
 
     // If a temp component slug is present, claim it for this user
     if (slug && data.session?.user?.id) {
