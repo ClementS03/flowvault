@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,7 +13,8 @@ export default async function DashboardPage() {
   // Session is already verified by layout.tsx — safe to assume it exists
   const supabase = createServerComponentClient({ cookies });
   const { data: { session } } = await supabase.auth.getSession();
-  const userId = session!.user.id;
+  if (!session) redirect('/signin');
+  const userId = session.user.id;
 
   // Parallel fetch: components + profile
   const [{ data: components }, { data: profile }] = await Promise.all([
