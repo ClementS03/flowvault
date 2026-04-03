@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CopyToWebflowButton from '@/components/CopyToWebflowButton';
 import CopyLinkButton from '@/components/CopyLinkButton';
+import PasswordGate from './PasswordGate';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 
 interface Props {
@@ -17,7 +19,7 @@ export default async function ComponentPage({ params }: Props) {
 
   const { data: component } = await supabaseAdmin
     .from('components')
-    .select('id, name, description, category, tags, image_url, copy_count, json_path, is_public, is_temporary, expires_at')
+    .select('id, name, description, category, tags, image_url, copy_count, json_path, is_public, is_temporary, expires_at, user_id, password_hash')
     .eq('slug', slug)
     .single();
 
@@ -26,6 +28,27 @@ export default async function ComponentPage({ params }: Props) {
   // Don't serve expired temp components
   if (component.is_temporary && component.expires_at && new Date(component.expires_at) < new Date()) {
     notFound();
+  }
+
+  // Access control for private components
+  if (!component.is_public) {
+    const supabase = createServerComponentClient({ cookies });
+    const { data: { session } } = await supabase.auth.getSession();
+    const isOwner = session?.user?.id === component.user_id;
+
+    if (!isOwner) {
+      if (component.password_hash) {
+        // Check if visitor already unlocked via cookie
+        const unlockCookie = cookies().get(`unlock_${component.id}`);
+        if (!unlockCookie) {
+          return <PasswordGate componentId={component.id} componentName={component.name} />;
+        }
+        // Cookie present — allow through (fall through to render below)
+      } else {
+        // Truly private — no password, not the owner
+        notFound();
+      }
+    }
   }
 
   const { data: signedData } = await supabaseAdmin.storage
