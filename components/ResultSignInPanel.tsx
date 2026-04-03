@@ -18,10 +18,14 @@ export default function ResultSignInPanel({ slug }: { slug: string }) {
 
   async function handleGoogle() {
     setIsLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: redirectURL },
-    });
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: redirectURL },
+      });
+    } catch {
+      setIsLoading(false);
+    }
   }
 
   async function handleMagicLink(e: React.FormEvent) {

@@ -29,6 +29,10 @@ export default async function ResultPage({ searchParams }: Props) {
     .from('components-json')
     .createSignedUrl(component.json_path, 3600); // 1 hour
 
+  if (!signedData?.signedUrl) {
+    console.error(`[result] Failed to generate signed URL for component ${component.id} (path: ${component.json_path})`);
+  }
+
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/c/${slug}`;
 
   return (
