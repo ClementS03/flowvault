@@ -1,0 +1,278 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { createComponent } from '@/app/actions/createComponent';
+
+const CATEGORIES = [
+  { value: '', label: 'No category' },
+  { value: 'hero', label: 'Hero' },
+  { value: 'navbar', label: 'Navbar' },
+  { value: 'pricing', label: 'Pricing' },
+  { value: 'footer', label: 'Footer' },
+  { value: 'feature', label: 'Feature' },
+  { value: 'card', label: 'Card' },
+  { value: 'other', label: 'Other' },
+];
+
+interface Props {
+  json: string;
+  onClose: () => void;
+}
+
+export default function UploadSlideOver({ json, onClose }: Props) {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+  }, [supabase]);
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be under 2MB');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      formData.set('is_public', String(isPublic));
+      const { slug } = await createComponent(formData, json);
+      router.push(isLoggedIn ? `/c/${slug}` : `/upload/result?slug=${slug}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      toast.error(message);
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Panel */}
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-bg shadow-2xl flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="font-heading font-semibold text-ink">
+            Configure your component
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-md text-ink-3 hover:text-ink hover:bg-surface transition-colors"
+            aria-label="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Form */}
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5"
+        >
+          {/* Preview image */}
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">
+              Preview image <span className="text-ink-3 font-normal">(optional)</span>
+            </label>
+            <div
+              className="relative w-full h-36 rounded-lg border border-dashed border-border bg-surface flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent-bg transition-colors overflow-hidden"
+              onClick={() => imageInputRef.current?.click()}
+            >
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-ink-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3.75 3h16.5M21 3.75v13.5A2.25 2.25 0 0118.75 19.5H5.25A2.25 2.25 0 013 17.25V3.75" />
+                  </svg>
+                  <span className="text-xs">Click to upload (JPEG/PNG, max 2MB)</span>
+                </div>
+              )}
+            </div>
+            <input
+              ref={imageInputRef}
+              name="preview_image"
+              type="file"
+              accept="image/jpeg,image/png"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+          </div>
+
+          {/* Name */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-ink mb-1.5">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              maxLength={60}
+              placeholder="e.g. Hero Section"
+              className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-ink mb-1.5">
+              Description <span className="text-ink-3 font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              maxLength={200}
+              rows={3}
+              placeholder="What does this component do?"
+              className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors resize-none"
+            />
+          </div>
+
+          {/* Category + Tags row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-ink mb-1.5">
+                Category
+              </label>
+              <select
+                id="category"
+                name="category"
+                className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="tags" className="block text-sm font-medium text-ink mb-1.5">
+                Tags
+              </label>
+              <input
+                id="tags"
+                name="tags"
+                type="text"
+                placeholder="hero, dark, minimal"
+                className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+              />
+              <p className="mt-1 text-xs text-ink-3">Comma-separated, max 5</p>
+            </div>
+          </div>
+
+          {/* Visibility toggles */}
+          <div className="border-t border-border pt-4 flex flex-col gap-3">
+            {/* Public toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-ink">Make public</p>
+                <p className="text-xs text-ink-3">Anyone can find and copy this component</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isPublic}
+                onClick={() => setIsPublic(!isPublic)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                  isPublic ? 'bg-accent' : 'bg-ink-3'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                    isPublic ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Password field (shown when not public) */}
+            {!isPublic && (
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-ink mb-1.5">
+                  Password protect
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="text"
+                  placeholder="Set a password"
+                  className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+                />
+                <p className="mt-1 text-xs text-ink-3">
+                  Anyone with the link will need this password to copy the component
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Submit */}
+          <div className="border-t border-border pt-4 pb-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-3 text-sm transition-colors disabled:opacity-60"
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Saving…
+                </>
+              ) : isLoggedIn ? (
+                'Publish component'
+              ) : (
+                'Get share link'
+              )}
+            </button>
+            {!isLoggedIn && (
+              <p className="mt-2 text-center text-xs text-ink-3">
+                No account needed — sign in later to store it permanently.
+              </p>
+            )}
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
