@@ -15,35 +15,45 @@ export default async function BrowsePage({ searchParams }: Props) {
   const category = searchParams.category?.trim() || null;
   const tag = searchParams.tag?.trim() || null;
 
-  // 1. Fetch matching public components
-  let query = supabaseAdmin
-    .from('components')
-    .select('id, slug, name, description, category, tags, image_url, copy_count, created_at, user_id')
-    .eq('is_public', true)
-    .eq('is_temporary', false)
-    .order('copy_count', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(60);
-
-  if (category) query = query.eq('category', category);
-  if (tag) query = query.contains('tags', [tag]);
-
-  const { data: components } = await query;
-  const list = components ?? [];
-
-  // 2. Fetch profiles for the authors
-  const userIds = Array.from(new Set(list.map((c) => c.user_id).filter(Boolean)));
+  let list: {
+    id: string; slug: string; name: string; description: string | null;
+    category: string | null; tags: string[] | null; image_url: string | null;
+    copy_count: number; created_at: string; user_id: string | null;
+  }[] = [];
   const profileMap: Record<string, { username: string | null; display_name: string | null; avatar_url: string | null }> = {};
 
-  if (userIds.length > 0) {
-    const { data: profiles } = await supabaseAdmin
-      .from('profiles')
-      .select('id, username, display_name, avatar_url')
-      .in('id', userIds);
+  try {
+    // 1. Fetch matching public components
+    let query = supabaseAdmin
+      .from('components')
+      .select('id, slug, name, description, category, tags, image_url, copy_count, created_at, user_id')
+      .eq('is_public', true)
+      .eq('is_temporary', false)
+      .order('copy_count', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(60);
 
-    for (const p of profiles ?? []) {
-      profileMap[p.id] = p;
+    if (category) query = query.eq('category', category);
+    if (tag) query = query.contains('tags', [tag]);
+
+    const { data: components, error: componentsError } = await query;
+    if (componentsError) console.error('[browse] components query error:', componentsError.message);
+    list = components ?? [];
+
+    // 2. Fetch profiles for the authors
+    const userIds = Array.from(new Set(list.map((c) => c.user_id).filter(Boolean)));
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabaseAdmin
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .in('id', userIds);
+      if (profilesError) console.error('[browse] profiles query error:', profilesError.message);
+      for (const p of profiles ?? []) {
+        profileMap[p.id] = p;
+      }
     }
+  } catch (err) {
+    console.error('[browse] unexpected error:', err);
   }
 
   return (
@@ -58,7 +68,7 @@ export default async function BrowsePage({ searchParams }: Props) {
         </div>
 
         {/* Filters */}
-        <Suspense>
+        <Suspense fallback={<div className="h-10" />}>
           <BrowseFilters />
         </Suspense>
 

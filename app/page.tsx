@@ -7,14 +7,24 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   // Fetch a few live stats for social proof
-  const [{ count: componentCount }, { count: copyCount }] = await Promise.all([
-    supabaseAdmin.from("components").select("*", { count: "exact", head: true }).eq("is_public", true).eq("is_temporary", false),
-    supabaseAdmin.from("copies").select("*", { count: "exact", head: true }),
-  ]);
+  let componentCount = 0;
+  let copyCount = 0;
+  try {
+    const [compResult, copyResult] = await Promise.all([
+      supabaseAdmin.from("components").select("*", { count: "exact", head: true }).eq("is_public", true).eq("is_temporary", false),
+      supabaseAdmin.from("copies").select("*", { count: "exact", head: true }),
+    ]);
+    if (compResult.error) console.error("[home] components count error:", compResult.error.message);
+    if (copyResult.error) console.error("[home] copies count error:", copyResult.error.message);
+    componentCount = compResult.count ?? 0;
+    copyCount = copyResult.count ?? 0;
+  } catch (err) {
+    console.error("[home] stats error:", err);
+  }
 
   const stats = [
-    { value: componentCount ?? 0, label: "components shared" },
-    { value: copyCount ?? 0, label: "copies made" },
+    { value: componentCount, label: "components shared" },
+    { value: copyCount, label: "copies made" },
   ];
 
   return (
