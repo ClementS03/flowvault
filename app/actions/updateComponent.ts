@@ -28,7 +28,7 @@ export async function updateComponent(
   }
 
   // 3. Parse fields
-  const name = (formData.get('name') as string)?.trim();
+  const name = ((formData.get('name') as string) ?? '').trim();
   const description = (formData.get('description') as string)?.trim() || null;
   const category = (formData.get('category') as string) || null;
   const tagsRaw = (formData.get('tags') as string) || '';
@@ -53,10 +53,16 @@ export async function updateComponent(
     // Delete old image from storage if it exists
     if (component.image_url) {
       // Path is "{componentId}.jpg" or "{componentId}.png" in component-previews bucket
-      await Promise.all([
+      const [{ error: rmJpgError }, { error: rmPngError }] = await Promise.all([
         supabaseAdmin.storage.from('component-previews').remove([`${id}.jpg`]),
         supabaseAdmin.storage.from('component-previews').remove([`${id}.png`]),
       ]);
+      if (rmJpgError && !rmJpgError.message.includes('not found')) {
+        console.error('[updateComponent] Failed to remove old image (jpg):', rmJpgError.message);
+      }
+      if (rmPngError && !rmPngError.message.includes('not found')) {
+        console.error('[updateComponent] Failed to remove old image (png):', rmPngError.message);
+      }
     }
     imageUrl = null;
   } else if (imageFile && imageFile.size > 0) {
@@ -68,12 +74,6 @@ export async function updateComponent(
       return { error: 'Preview image must be under 2MB' };
     }
 
-    // Delete old images first (both extensions — one will 404, errors intentionally ignored)
-    await Promise.all([
-      supabaseAdmin.storage.from('component-previews').remove([`${id}.jpg`]),
-      supabaseAdmin.storage.from('component-previews').remove([`${id}.png`]),
-    ]);
-
     const ext = imageFile.type === 'image/png' ? 'png' : 'jpg';
     const imagePath = `${id}.${ext}`;
 
@@ -84,6 +84,10 @@ export async function updateComponent(
     if (imgError) {
       return { error: 'Failed to upload preview image' };
     }
+
+    // Delete old images only after successful upload (avoid orphaning DB reference)
+    const otherExt = ext === 'jpg' ? 'png' : 'jpg';
+    await supabaseAdmin.storage.from('component-previews').remove([`${id}.${otherExt}`]);
 
     const { data: { publicUrl } } = supabaseAdmin.storage
       .from('component-previews')
@@ -108,7 +112,8 @@ export async function updateComponent(
   const { error: updateError } = await supabaseAdmin
     .from('components')
     .update(updatePayload)
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', session.user.id);
 
   if (updateError) return { error: 'Failed to update component' };
 
