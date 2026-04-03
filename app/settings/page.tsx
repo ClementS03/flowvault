@@ -36,7 +36,12 @@ export default async function SettingsPage() {
           userId={userId}
           email={session.user.email ?? ''}
           plan={profile?.plan ?? 'free'}
-          initialDisplayName={profile?.display_name ?? ''}
+          initialDisplayName={
+            profile?.display_name ||
+            (session.user.user_metadata?.full_name as string | undefined) ||
+            (session.user.user_metadata?.name as string | undefined) ||
+            ''
+          }
           initialUsername={profile?.username ?? ''}
           initialBio={profile?.bio ?? ''}
           initialWebsite={profile?.website ?? ''}

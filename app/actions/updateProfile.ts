@@ -61,7 +61,8 @@ export async function updateProfile(formData: FormData): Promise<UpdateProfileRe
 
   const { error: updateError } = await supabaseAdmin
     .from('profiles')
-    .update({
+    .upsert({
+      id: userId,
       display_name: displayName,
       username: usernameRaw,
       bio,
@@ -69,8 +70,7 @@ export async function updateProfile(formData: FormData): Promise<UpdateProfileRe
         ? website.startsWith('http') ? website : `https://${website}`
         : null,
       updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId);
+    }, { onConflict: 'id' });
 
   if (updateError) return { error: 'Failed to save profile' };
 
