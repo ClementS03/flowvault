@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -46,7 +46,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
     };
   }, [imagePreview]);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
@@ -58,7 +58,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
     setImagePreview(url);
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);

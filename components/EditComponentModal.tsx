@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { updateComponent } from '@/app/actions/updateComponent';
@@ -50,7 +50,7 @@ export default function EditComponentModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blobUrlRef = useRef<string | null>(null);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -88,7 +88,7 @@ export default function EditComponentModal({
     };
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setIsSaving(true);
 

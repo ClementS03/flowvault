@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import toast from 'react-hot-toast';
 
@@ -28,7 +28,7 @@ export default function ResultSignInPanel({ slug }: { slug: string }) {
     }
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
+  async function handleMagicLink(e: FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { deleteComponent } from '@/app/actions/deleteComponent';
@@ -22,7 +22,7 @@ interface ComponentRowProps {
 }
 
 /** Inline tooltip wrapper — shows label above child on hover */
-function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+function Tip({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="relative group/tip">
       {children}

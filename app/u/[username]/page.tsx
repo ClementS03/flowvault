@@ -161,7 +161,7 @@ export default async function UserProfilePage({ params }: Props) {
               <div className="rounded-xl border border-border bg-surface p-16 text-center">
                 <p className="font-medium text-ink mb-1">No public components yet</p>
                 <p className="text-sm text-ink-3">
-                  This user hasn't shared any components yet.
+                  This user hasn&apos;t shared any components yet.
                 </p>
               </div>
             )}
