@@ -31,10 +31,14 @@ export default function ComponentRow({
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  function handleCopyLink() {
+  async function handleCopyLink() {
     const shareUrl = `${window.location.origin}/c/${slug}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast.success('Link copied!');
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied!');
+    } catch {
+      toast.error('Failed to copy link.');
+    }
   }
 
   function handleCopyToWebflow() {
