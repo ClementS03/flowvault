@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import ButtonSignin from "./ButtonSignin";
 import config from "@/config";
@@ -12,12 +12,12 @@ const navLinks = [
 ];
 
 const Header = () => {
-  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
-  }, [searchParams]);
+  }, [pathname]);
 
   return (
     <header
