@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { copyToWebflow } from '@/libs/copyToWebflow';
 
@@ -10,27 +10,33 @@ interface Props {
 }
 
 export default function CopyToWebflowButton({ componentId, signedJsonUrl }: Props) {
+  const [cachedJson, setCachedJson] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
 
-  async function handleCopy() {
-    if (!signedJsonUrl) {
-      toast.error('Component data unavailable.');
+  // Pre-fetch JSON on mount so the click handler can call copyToWebflow()
+  // synchronously — document.execCommand('copy') requires a synchronous user gesture.
+  useEffect(() => {
+    if (!signedJsonUrl) return;
+    fetch(signedJsonUrl)
+      .then((r) => r.text())
+      .then(setCachedJson)
+      .catch(() => {}); // silent — button will show error on click if still null
+  }, [signedJsonUrl]);
+
+  function handleCopy() {
+    if (!cachedJson) {
+      toast.error('Component data unavailable. Please refresh the page.');
       return;
     }
 
     setIsCopying(true);
     try {
-      const res = await fetch(signedJsonUrl);
-      if (!res.ok) throw new Error('Failed to fetch component data');
-      const json = await res.text();
-
       const bridge = document.getElementById('clipboard-bridge') as HTMLTextAreaElement | null;
       if (!bridge) throw new Error('Clipboard bridge not found');
 
-      const success = copyToWebflow(json, bridge);
+      const success = copyToWebflow(cachedJson, bridge);
       if (success) {
         toast.success('Copied! Paste in Webflow Designer (Ctrl+V)');
-        // Track the copy (fire-and-forget)
         fetch(`/api/components/${componentId}/copy`, { method: 'POST' }).catch(() => {});
       } else {
         toast.error('Copy failed. Try again.');
@@ -43,11 +49,13 @@ export default function CopyToWebflowButton({ componentId, signedJsonUrl }: Prop
     }
   }
 
+  const isReady = !!cachedJson;
+
   return (
     <button
       type="button"
       onClick={handleCopy}
-      disabled={isCopying || !signedJsonUrl}
+      disabled={isCopying || !isReady}
       className="w-full flex items-center justify-center gap-2 rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-3 text-sm transition-colors disabled:opacity-50"
     >
       {isCopying ? (
@@ -57,6 +65,14 @@ export default function CopyToWebflowButton({ componentId, signedJsonUrl }: Prop
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           Copying…
+        </>
+      ) : !isReady ? (
+        <>
+          <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Loading…
         </>
       ) : (
         <>
