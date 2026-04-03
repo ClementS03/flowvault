@@ -43,8 +43,7 @@ export default function AvatarUpload({
 
     setUploading(true);
 
-    const ext = file.name.split('.').pop() ?? 'jpg';
-    const path = `${userId}/${Date.now()}.${ext}`;
+    const path = `${userId}/avatar`;
 
     const { error: storageError } = await supabase.storage
       .from('avatars')

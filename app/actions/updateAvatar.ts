@@ -30,5 +30,6 @@ export async function updateAvatarUrl(avatarUrl: string | null): Promise<UpdateA
   if (error) return { error: 'Failed to update avatar' };
 
   revalidatePath('/settings');
+  revalidatePath('/', 'layout');
   return { ok: true };
 }
