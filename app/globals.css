@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg:        #ffffff;
+  --color-surface:   #fafafe;
+  --color-border:    #f1f3f8;
+  --color-ink:       #0f172a;
+  --color-ink-2:     #64748b;
+  --color-ink-3:     #94a3b8;
+  --color-accent:    #6366f1;
+  --color-accent-h:  #4f46e5;
+  --color-accent-bg: #eef2ff;
+  --font-heading:    'Space Grotesk', sans-serif;
+  --font-body:       'Inter', sans-serif;
+  --max-width:       1200px;
+  --nav-height:      3.5rem;
+  --px-site:         clamp(1rem, 4vw, 2.5rem);
+}
+
+html,
+body {
+  scroll-behavior: smooth;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
