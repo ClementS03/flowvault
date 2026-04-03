@@ -1,47 +1,106 @@
-import { notFound } from "next/navigation";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { notFound } from 'next/navigation';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import CopyToWebflowButton from '@/components/CopyToWebflowButton';
+import CopyLinkButton from '@/components/CopyLinkButton';
+import supabaseAdmin from '@/libs/supabaseAdmin';
 
 interface Props {
   params: { slug: string };
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function ComponentPage({ params }: Props) {
   const { slug } = params;
 
-  // TODO Phase 1: fetch component from Supabase by slug
-  // For now, show a stub so the route exists
-  if (!slug) notFound();
+  const { data: component } = await supabaseAdmin
+    .from('components')
+    .select('id, name, description, category, tags, image_url, copy_count, json_path, is_public, is_temporary, expires_at')
+    .eq('slug', slug)
+    .single();
+
+  if (!component) notFound();
+
+  // Don't serve expired temp components
+  if (component.is_temporary && component.expires_at && new Date(component.expires_at) < new Date()) {
+    notFound();
+  }
+
+  const { data: signedData } = await supabaseAdmin.storage
+    .from('components-json')
+    .createSignedUrl(component.json_path, 3600);
+
+  if (!signedData?.signedUrl) {
+    console.error(`[c/slug] Failed to generate signed URL for component ${component.id}`);
+  }
+
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/c/${slug}`;
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-bg">
       <Header />
-      <main className="mx-auto px-[var(--px-site)] py-16" style={{ maxWidth: "var(--max-width)" }}>
+      <main className="flex-1 px-[var(--px-site)] py-16">
         <div className="max-w-2xl mx-auto">
-          {/* Component header */}
+
+          {/* Header */}
           <div className="mb-8">
-            <p className="text-sm text-ink-3 mb-2">Component</p>
-            <h1 className="font-heading text-3xl font-bold text-ink mb-3">{slug}</h1>
-            <p className="text-ink-2">No description yet.</p>
+            {component.category && (
+              <span className="inline-flex items-center rounded-full bg-accent-bg px-2.5 py-0.5 text-xs font-medium text-accent capitalize mb-3">
+                {component.category}
+              </span>
+            )}
+            <h1 className="font-heading text-3xl font-bold text-ink mb-2">{component.name}</h1>
+            {component.description && (
+              <p className="text-ink-2">{component.description}</p>
+            )}
+            {component.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {component.tags.map((tag: string) => (
+                  <span key={tag} className="rounded-md bg-surface border border-border px-2 py-0.5 text-xs text-ink-2">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Copy button */}
-          <div className="rounded-xl border border-border bg-surface p-8 text-center">
-            <p className="text-sm text-ink-3 mb-4">Ready to use in Webflow Designer</p>
-            <button
-              disabled
-              className="inline-flex items-center gap-2 rounded-lg bg-accent text-white font-medium px-6 py-3 text-sm opacity-50 cursor-not-allowed"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
-              </svg>
-              Copy to Webflow
-            </button>
-            <p className="text-xs text-ink-3 mt-3">Coming in Phase 1 implementation</p>
+          {/* Preview image */}
+          {component.image_url && (
+            <div className="mb-8 rounded-xl overflow-hidden border border-border">
+              <img src={component.image_url} alt={component.name} className="w-full object-cover" />
+            </div>
+          )}
+
+          {/* Action card */}
+          <div className="rounded-xl border border-border bg-surface p-6 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-ink">Ready to use in Webflow Designer</p>
+              {component.copy_count > 0 && (
+                <span className="text-xs text-ink-3">{component.copy_count} {component.copy_count === 1 ? 'copy' : 'copies'}</span>
+              )}
+            </div>
+
+            <CopyToWebflowButton
+              componentId={component.id}
+              signedJsonUrl={signedData?.signedUrl ?? null}
+            />
+
+            <div>
+              <p className="text-xs font-medium text-ink-3 uppercase tracking-widest mb-2">Share link</p>
+              <CopyLinkButton url={shareUrl} />
+            </div>
+
+            {component.is_temporary && (
+              <p className="text-xs text-ink-3 text-center">
+                Expires in ~24h · <a href="/signin" className="underline hover:text-ink-2">Sign in</a> to store permanently
+              </p>
+            )}
           </div>
+
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
