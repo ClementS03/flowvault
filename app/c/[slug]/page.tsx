@@ -73,7 +73,7 @@ export default async function ComponentPage({ params }: Props) {
   }
 
   const profile = profileResult.data;
-  const moreComponents = moreResult.data ?? [];
+  const moreComponents: { id: string; slug: string; name: string; image_url: string | null; category: string | null; copy_count: number }[] = moreResult.data ?? [];
   const displayName = profile?.display_name || profile?.username || null;
 
   const host = headers().get('host') ?? '';
