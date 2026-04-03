@@ -98,7 +98,7 @@ export default async function DashboardPage() {
 
         {/* Component list or empty state */}
         {components && components.length > 0 ? (
-          <div className="rounded-xl border border-border bg-white overflow-hidden">
+          <div className="rounded-xl border border-border bg-white">
             {components.map((c) => (
               <ComponentRow
                 key={c.id}

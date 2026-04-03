@@ -131,7 +131,7 @@ export default function ComponentRow({
 
   return (
     <>
-      <div className={`flex items-center gap-4 px-4 py-3 border-b border-border last:border-0 ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className={`flex items-center gap-4 px-4 py-3 border-b border-border last:border-0 first:rounded-t-xl last:rounded-b-xl ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Thumbnail */}
         <div className="w-12 h-12 rounded-lg bg-surface border border-border flex-shrink-0 overflow-hidden">
           {imageUrl ? (
