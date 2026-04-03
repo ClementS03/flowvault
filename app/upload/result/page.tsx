@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import Header from '@/components/Header';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 import ResultSignInPanel from '@/components/ResultSignInPanel';
@@ -31,7 +32,9 @@ export default async function ResultPage({ searchParams }: Props) {
     console.error(`[result] Failed to generate signed URL for component ${component.id}`);
   }
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/c/${slug}`;
+  const host = headers().get('host') ?? '';
+  const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`}/c/${slug}`;
 
   return (
     <div className="flex flex-col min-h-screen bg-bg">
