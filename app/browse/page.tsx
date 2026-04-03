@@ -158,7 +158,6 @@ export default async function BrowsePage({ searchParams }: Props) {
                         <Link
                           href={`/u/${username}`}
                           className="flex items-center gap-1.5 min-w-0 group/author"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           {profile?.avatar_url ? (
                             <img
