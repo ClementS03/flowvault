@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   const [{ data: components }, { data: profile }] = await Promise.all([
     supabaseAdmin
       .from('components')
-      .select('id, name, slug, category, image_url, is_public, copy_count, created_at, json_path')
+      .select('id, name, slug, category, description, tags, image_url, is_public, copy_count, created_at, json_path')
       .eq('user_id', userId)
       .eq('is_temporary', false)
       .order('created_at', { ascending: false }),
@@ -110,6 +110,8 @@ export default async function DashboardPage() {
                 isPublic={c.is_public}
                 copyCount={c.copy_count}
                 signedJsonUrl={signedUrls[c.id] ?? ''}
+                description={c.description}
+                tags={c.tags ?? []}
               />
             ))}
           </div>
