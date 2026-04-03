@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { headers, cookies } from 'next/headers';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CopyToWebflowButton from '@/components/CopyToWebflowButton';
@@ -38,26 +39,42 @@ export default async function ComponentPage({ params }: Props) {
 
     if (!isOwner) {
       if (component.password_hash) {
-        // Check if visitor already unlocked via cookie
         const unlockCookie = cookies().get(`unlock_${component.id}`);
         if (!unlockCookie) {
           return <PasswordGate componentId={component.id} componentName={component.name} />;
         }
-        // Cookie present — allow through (fall through to render below)
       } else {
-        // Truly private — no password, not the owner
         notFound();
       }
     }
   }
 
-  const { data: signedData } = await supabaseAdmin.storage
-    .from('components-json')
-    .createSignedUrl(component.json_path, 3600);
+  // Fetch author profile + their other public components in parallel
+  const [signedResult, profileResult, moreResult] = await Promise.all([
+    supabaseAdmin.storage.from('components-json').createSignedUrl(component.json_path, 3600),
+    component.user_id
+      ? supabaseAdmin.from('profiles').select('username, display_name, avatar_url').eq('id', component.user_id).single()
+      : Promise.resolve({ data: null }),
+    component.user_id
+      ? supabaseAdmin
+          .from('components')
+          .select('id, slug, name, image_url, category, copy_count')
+          .eq('user_id', component.user_id)
+          .eq('is_public', true)
+          .eq('is_temporary', false)
+          .neq('id', component.id)
+          .order('copy_count', { ascending: false })
+          .limit(3)
+      : Promise.resolve({ data: null }),
+  ]);
 
-  if (!signedData?.signedUrl) {
+  if (!signedResult.data?.signedUrl) {
     console.error(`[c/slug] Failed to generate signed URL for component ${component.id}`);
   }
+
+  const profile = profileResult.data;
+  const moreComponents = moreResult.data ?? [];
+  const displayName = profile?.display_name || profile?.username || null;
 
   const host = headers().get('host') ?? '';
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
@@ -71,11 +88,13 @@ export default async function ComponentPage({ params }: Props) {
 
           {/* Header */}
           <div className="mb-8">
-            {component.category && (
-              <span className="inline-flex items-center rounded-full bg-accent-bg px-2.5 py-0.5 text-xs font-medium text-accent capitalize mb-3">
-                {component.category}
-              </span>
-            )}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              {component.category && (
+                <span className="inline-flex items-center rounded-full bg-accent-bg px-2.5 py-0.5 text-xs font-medium text-accent capitalize">
+                  {component.category}
+                </span>
+              )}
+            </div>
             <h1 className="font-heading text-3xl font-bold text-ink mb-2">{component.name}</h1>
             {component.description && (
               <p className="text-ink-2">{component.description}</p>
@@ -87,6 +106,24 @@ export default async function ComponentPage({ params }: Props) {
                     {tag}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {/* Author */}
+            {displayName && profile?.username && (
+              <div className="mt-4 flex items-center gap-2">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt={displayName} className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-accent-bg flex items-center justify-center text-accent text-xs font-semibold">
+                    {displayName[0].toUpperCase()}
+                  </span>
+                )}
+                <span className="text-sm text-ink-2">by{' '}
+                  <Link href={`/u/${profile.username}`} className="font-medium text-ink hover:text-accent transition-colors">
+                    @{profile.username}
+                  </Link>
+                </span>
               </div>
             )}
           </div>
@@ -109,7 +146,7 @@ export default async function ComponentPage({ params }: Props) {
 
             <CopyToWebflowButton
               componentId={component.id}
-              signedJsonUrl={signedData?.signedUrl ?? null}
+              signedJsonUrl={signedResult.data?.signedUrl ?? null}
             />
 
             <div>
@@ -123,6 +160,52 @@ export default async function ComponentPage({ params }: Props) {
               </p>
             )}
           </div>
+
+          {/* More from this author */}
+          {moreComponents.length > 0 && profile?.username && (
+            <div className="mt-12">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading font-semibold text-ink">
+                  More from @{profile.username}
+                </h2>
+                <Link href={`/u/${profile.username}`} className="text-xs text-ink-3 hover:text-accent transition-colors">
+                  See all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {moreComponents.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/c/${c.slug}`}
+                    className="group rounded-lg border border-border bg-surface hover:border-accent/40 hover:shadow-sm transition-all overflow-hidden flex flex-col"
+                  >
+                    {c.image_url ? (
+                      <div className="w-full h-24 overflow-hidden border-b border-border">
+                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
+                      </div>
+                    ) : (
+                      <div className="w-full h-24 bg-accent-bg border-b border-border flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-7 h-7 text-accent/30">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3.75 3h16.5M21 3.75v13.5A2.25 2.25 0 0118.75 19.5H5.25A2.25 2.25 0 013 17.25V3.75" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="p-3 flex flex-col gap-1 flex-1">
+                      <p className="text-xs font-medium text-ink line-clamp-1">{c.name}</p>
+                      <div className="flex items-center justify-between mt-auto">
+                        {c.category && (
+                          <span className="text-xs text-accent capitalize">{c.category}</span>
+                        )}
+                        {c.copy_count > 0 && (
+                          <span className="text-xs text-ink-3">{c.copy_count} cop{c.copy_count === 1 ? 'y' : 'ies'}</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       </main>
