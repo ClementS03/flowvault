@@ -4,7 +4,11 @@
  * Example: "Hero Section" → "hero-section-a3f8x2"
  */
 function randomSuffix(length = 6): string {
-  return Math.random().toString(36).slice(2, 2 + length).padEnd(length, '0');
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(36).padStart(2, '0'))
+    .join('')
+    .slice(0, length);
 }
 
 export function slugify(name: string): string {

@@ -46,6 +46,21 @@ export async function createComponent(
     throw new Error('Invalid Webflow component data');
   }
 
+  // Enforce free plan limit before any storage uploads to avoid orphaned files
+  let currentComponentCount = 0;
+  if (userId) {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('component_count, plan')
+      .eq('id', userId)
+      .single();
+
+    if (profile?.plan === 'free' && (profile?.component_count ?? 0) >= 10) {
+      throw new Error('Free plan limit reached. Upgrade to Pro for unlimited components.');
+    }
+    currentComponentCount = profile?.component_count ?? 0;
+  }
+
   const componentId = crypto.randomUUID();
   const slug = slugify(name);
 
@@ -62,7 +77,9 @@ export async function createComponent(
 
   if (jsonError) throw new Error('Failed to store component data');
 
-  // Upload preview image if provided
+  // Upload preview image if provided.
+  // Image upload failure is non-fatal: the component is created without a preview image
+  // rather than blocking the entire upload. The caller receives { slug } with no error signal.
   let imageUrl: string | null = null;
   let imagePath: string | null = null;
 
@@ -97,23 +114,11 @@ export async function createComponent(
     }
   }
 
-  // Hash password if component is password-protected
+  // Hash password if component is password-protected.
+  // If is_public is true, any provided password is intentionally ignored.
   let passwordHash: string | null = null;
   if (!isPublic && passwordRaw) {
     passwordHash = await hashPassword(passwordRaw);
-  }
-
-  // Enforce free plan limit
-  if (userId) {
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('component_count, plan')
-      .eq('id', userId)
-      .single();
-
-    if (profile?.plan === 'free' && (profile?.component_count ?? 0) >= 10) {
-      throw new Error('Free plan limit reached. Upgrade to Pro for unlimited components.');
-    }
   }
 
   // Insert component row
@@ -150,17 +155,11 @@ export async function createComponent(
     throw new Error('Failed to save component');
   }
 
-  // Increment component_count for logged-in users
+  // Increment component_count using the count fetched during plan-limit check
   if (userId) {
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('component_count')
-      .eq('id', userId)
-      .single();
-
     await supabaseAdmin
       .from('profiles')
-      .update({ component_count: (profile?.component_count ?? 0) + 1 })
+      .update({ component_count: currentComponentCount + 1 })
       .eq('id', userId);
   }
 
