@@ -1,0 +1,48 @@
+<h2>Actions par composant</h2>
+<p class="subtitle">Sur chaque ligne de ta bibliothèque, quelles actions veux-tu avoir ?</p>
+
+<div class="options" data-multiselect style="margin-top: 20px;">
+
+  <div class="option" data-choice="copy-link" onclick="toggleSelect(this)">
+    <div class="letter">⎘</div>
+    <div class="content">
+      <h3>Copier le lien de partage</h3>
+      <p>Bouton "Copy link" — copie l'URL <code>/c/[slug]</code> dans le presse-papiers</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="copy-webflow" onclick="toggleSelect(this)">
+    <div class="letter">⬇</div>
+    <div class="content">
+      <h3>Copy to Webflow</h3>
+      <p>Bouton pour copier directement le composant dans le Designer depuis le dashboard</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="toggle-public" onclick="toggleSelect(this)">
+    <div class="letter">👁</div>
+    <div class="content">
+      <h3>Toggle public / privé</h3>
+      <p>Basculer la visibilité inline — icône ou switch directement sur la ligne</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="delete" onclick="toggleSelect(this)">
+    <div class="letter">🗑</div>
+    <div class="content">
+      <h3>Supprimer</h3>
+      <p>Avec confirmation (modal ou double-clic) pour éviter les suppressions accidentelles</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="view" onclick="toggleSelect(this)">
+    <div class="letter">→</div>
+    <div class="content">
+      <h3>Voir la page publique</h3>
+      <p>Lien vers <code>/c/[slug]</code> — voir comment les autres voient le composant</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top: 16px;">Sélectionne tout ce que tu veux (multi-select). Le MVP peut rester minimal.</p>

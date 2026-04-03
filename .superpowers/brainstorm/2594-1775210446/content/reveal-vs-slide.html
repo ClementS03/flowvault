@@ -1,0 +1,166 @@
+<h2>Reveal vs Slide-over — comparaison détaillée</h2>
+<p class="subtitle">Voici comment chaque option se comporte en pratique sur la page upload</p>
+
+<div class="split" style="gap: 24px; align-items: flex-start;">
+
+  <!-- REVEAL -->
+  <div class="mockup" data-choice="reveal" onclick="toggleSelect(this)" style="cursor:pointer; flex:1;">
+    <div class="mockup-header" style="display:flex; align-items:center; justify-content:space-between;">
+      <span>A — Reveal inline</span>
+      <span style="font-size:11px; background:#e0e7ff; color:#6366f1; padding:2px 8px; border-radius:99px;">scroll</span>
+    </div>
+    <div class="mockup-body" style="padding: 14px; font-size: 12px;">
+      <!-- Nav -->
+      <div style="height:28px; background:#f1f5f9; border-radius:6px; margin-bottom:12px; display:flex; align-items:center; padding:0 10px; gap:8px;">
+        <div style="width:60px; height:8px; background:#6366f1; border-radius:4px; opacity:0.7;"></div>
+        <div style="flex:1;"></div>
+        <div style="width:40px; height:8px; background:#e0e7ff; border-radius:4px;"></div>
+      </div>
+
+      <!-- Titre -->
+      <div style="width:55%; height:10px; background:#0f172a; border-radius:4px; margin-bottom:5px;"></div>
+      <div style="width:75%; height:7px; background:#e2e8f0; border-radius:4px; margin-bottom:14px;"></div>
+
+      <!-- Paste zone — success state -->
+      <div style="border:2px solid #6366f1; border-radius:8px; padding:10px; text-align:center; background:#eef2ff; margin-bottom:10px;">
+        <div style="font-size:11px; color:#6366f1; font-weight:600;">✓ Hero Section collé</div>
+        <div style="font-size:10px; color:#818cf8; margin-top:2px;">12 éléments · XscpData v3</div>
+      </div>
+
+      <!-- Arrow animate -->
+      <div style="text-align:center; color:#6366f1; font-size:14px; margin:6px 0;">↓</div>
+
+      <!-- Form reveal -->
+      <div style="background:#fff; border:1px solid #e0e7ff; border-radius:8px; padding:12px;">
+        <div style="font-size:11px; font-weight:600; color:#0f172a; margin-bottom:10px;">Configure ton composant</div>
+
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Nom</div>
+          <div style="height:22px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Image de preview</div>
+          <div style="height:40px; background:#f8fafc; border:1px dashed #e0e7ff; border-radius:5px; display:flex; align-items:center; justify-content:center;">
+            <div style="font-size:10px; color:#94a3b8;">+ Upload image</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <div style="flex:1;">
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Catégorie</div>
+            <div style="height:22px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Tags</div>
+            <div style="height:22px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+          </div>
+        </div>
+
+        <!-- Switches -->
+        <div style="border-top:1px solid #f1f3f8; padding-top:8px; margin-top:4px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+            <div style="font-size:10px; color:#0f172a; font-weight:500;">Public</div>
+            <div style="width:28px; height:14px; background:#6366f1; border-radius:7px;"></div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:10px; color:#0f172a; font-weight:500;">Protéger par mot de passe</div>
+            <div style="width:28px; height:14px; background:#e2e8f0; border-radius:7px;"></div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="height:26px; background:#6366f1; border-radius:6px; margin-top:10px; display:flex; align-items:center; justify-content:center;">
+          <div style="font-size:11px; color:#fff; font-weight:600;">Save & Publish</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE-OVER -->
+  <div class="mockup" data-choice="slide" onclick="toggleSelect(this)" style="cursor:pointer; flex:1;">
+    <div class="mockup-header" style="display:flex; align-items:center; justify-content:space-between;">
+      <span>C — Slide-over panel</span>
+      <span style="font-size:11px; background:#e0e7ff; color:#6366f1; padding:2px 8px; border-radius:99px;">overlay</span>
+    </div>
+    <div class="mockup-body" style="padding:0; overflow:hidden; position:relative; min-height:360px;">
+      <!-- Background page (blurred/dimmed) -->
+      <div style="padding:14px; filter:brightness(0.85);">
+        <!-- Nav -->
+        <div style="height:28px; background:#f1f5f9; border-radius:6px; margin-bottom:12px;"></div>
+        <div style="width:55%; height:10px; background:#0f172a; border-radius:4px; margin-bottom:5px;"></div>
+        <div style="width:75%; height:7px; background:#e2e8f0; border-radius:4px; margin-bottom:14px;"></div>
+        <!-- Paste zone success -->
+        <div style="border:2px solid #6366f1; border-radius:8px; padding:10px; text-align:center; background:#eef2ff;">
+          <div style="font-size:11px; color:#6366f1; font-weight:600;">✓ Hero Section collé</div>
+          <div style="font-size:10px; color:#818cf8; margin-top:2px;">12 éléments · XscpData v3</div>
+        </div>
+      </div>
+
+      <!-- Overlay dim -->
+      <div style="position:absolute; inset:0; background:rgba(15,23,42,0.35); pointer-events:none;"></div>
+
+      <!-- Slide-over panel -->
+      <div style="position:absolute; top:0; right:0; bottom:0; width:62%; background:#fff; box-shadow:-8px 0 32px rgba(15,23,42,0.12); padding:14px; overflow-y:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div style="font-size:12px; font-weight:700; color:#0f172a;">Configure</div>
+          <div style="width:16px; height:16px; background:#f1f5f9; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; color:#64748b;">✕</div>
+        </div>
+
+        <!-- Preview thumbnail -->
+        <div style="height:48px; background:#f8fafc; border:1px dashed #e0e7ff; border-radius:6px; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">
+          <div style="font-size:10px; color:#94a3b8;">+ Image de preview</div>
+        </div>
+
+        <div style="margin-bottom:7px;">
+          <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Nom</div>
+          <div style="height:22px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+        </div>
+        <div style="margin-bottom:7px;">
+          <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Description</div>
+          <div style="height:36px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+        </div>
+        <div style="display:flex; gap:5px; margin-bottom:7px;">
+          <div style="flex:1;">
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Catégorie</div>
+            <div style="height:22px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:10px; color:#64748b; margin-bottom:3px;">Tags</div>
+            <div style="height:22px; background:#f8fafc; border:1px solid #e0e7ff; border-radius:5px;"></div>
+          </div>
+        </div>
+
+        <!-- Switches -->
+        <div style="border-top:1px solid #f1f3f8; padding-top:7px; margin-top:4px; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+            <div style="font-size:10px; color:#0f172a; font-weight:500;">Public</div>
+            <div style="width:28px; height:14px; background:#6366f1; border-radius:7px;"></div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:10px; color:#0f172a; font-weight:500;">Mot de passe</div>
+            <div style="width:28px; height:14px; background:#e2e8f0; border-radius:7px;"></div>
+          </div>
+        </div>
+
+        <div style="height:26px; background:#6366f1; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+          <div style="font-size:11px; color:#fff; font-weight:600;">Save & Publish</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+    <div class="pros-cons" style="margin:0;">
+      <div class="pros" style="font-size:12px;"><h4 style="font-size:12px;">Reveal — avantages</h4><ul><li>URL unique, simple à partager</li><li>Pas de perte de contexte</li><li>Accessible sur mobile</li></ul></div>
+      <div class="cons" style="font-size:12px;"><h4 style="font-size:12px;">Reveal — inconvénients</h4><ul><li>Page longue, faut scroller</li><li>Moins de punch visuel</li></ul></div>
+    </div>
+    <div class="pros-cons" style="margin:0;">
+      <div class="pros" style="font-size:12px;"><h4 style="font-size:12px;">Slide-over — avantages</h4><ul><li>Feeling premium, moderne</li><li>Formulaire toujours visible sans scroll</li><li>La zone de paste reste en fond</li></ul></div>
+      <div class="cons" style="font-size:12px;"><h4 style="font-size:12px;">Slide-over — inconvénients</h4><ul><li>Plus complexe à implémenter</li><li>Mobile = plein écran (pas un vrai panneau)</li></ul></div>
+    </div>
+  </div>
+</div>

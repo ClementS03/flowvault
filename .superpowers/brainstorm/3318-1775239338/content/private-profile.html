@@ -1,0 +1,30 @@
+<h2>Profil privé — que voit un visiteur ?</h2>
+<p class="subtitle">Quand un utilisateur active "Profil privé" dans ses settings</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Page bloquée</h3>
+      <p>La page <code>/u/username</code> retourne une erreur "This profile is private" — nom + avatar visible, rien d'autre. Les composants ne sont pas accessibles depuis le profil, mais restent accessibles via leur lien direct <code>/c/slug</code> s'ils sont publics.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Profil masqué + composants publics toujours accessibles</h3>
+      <p>Le profil <code>/u/username</code> est introuvable (404 ou "Private profile"). Mais les composants publics restent accessibles via <code>/c/slug</code> et apparaissent dans le browse. Le créateur est anonymisé dans le browse ("Private user").</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Profil + composants tous masqués</h3>
+      <p>Profil privé = tout est caché. La page <code>/u/username</code> retourne 404, et les composants publics de cet utilisateur disparaissent du browse et de leurs liens directs. Uniquement visible par le propriétaire connecté.</p>
+    </div>
+  </div>
+
+</div>
