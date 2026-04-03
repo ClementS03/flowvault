@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 
-export type UpdateProfileResult = { error: string } | { ok: true; username: string };
+export type UpdateProfileResult = { error: string } | { ok: true; username: string | null };
 
 export async function updateProfile(formData: FormData): Promise<UpdateProfileResult> {
   const supabase = createServerActionClient({ cookies });
@@ -30,13 +30,17 @@ export async function updateProfile(formData: FormData): Promise<UpdateProfileRe
       return { error: 'Username can only contain lowercase letters, numbers, and hyphens' };
     }
 
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: checkError } = await supabaseAdmin
       .from('profiles')
       .select('id')
       .eq('username', usernameRaw)
       .neq('id', userId)
       .single();
 
+    // PGRST116 = no rows found = username available
+    if (checkError && checkError.code !== 'PGRST116') {
+      return { error: 'Failed to check username availability' };
+    }
     if (existing) return { error: 'Username is already taken' };
   }
 
@@ -72,5 +76,5 @@ export async function updateProfile(formData: FormData): Promise<UpdateProfileRe
   revalidatePath('/settings');
   if (usernameRaw) revalidatePath(`/u/${usernameRaw}`);
 
-  return { ok: true, username: usernameRaw ?? '' };
+  return { ok: true, username: usernameRaw };
 }
