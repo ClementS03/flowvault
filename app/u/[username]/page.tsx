@@ -52,7 +52,7 @@ export default async function UserProfilePage({ params }: Props) {
         <Header />
         <main className="flex-1 flex items-center justify-center px-[var(--px-site)]">
           <div className="text-center">
-            <div className="mx-auto mb-4">{avatarEl('sm')}</div>
+            <div className="mx-auto mb-4">{avatarEl('lg')}</div>
             <h1 className="font-heading text-xl font-bold text-ink mb-1">{displayName}</h1>
             <p className="text-sm text-ink-3 mb-6">@{profile.username}</p>
             <div className="inline-flex items-center gap-2 bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-ink-2">
@@ -95,7 +95,7 @@ export default async function UserProfilePage({ params }: Props) {
             {/* Profile card */}
             <div className="rounded-xl border border-border bg-surface p-5">
               <div className="flex flex-col items-center md:items-start text-center md:text-left gap-1">
-                <div className="mb-3">{avatarEl('lg')}</div>
+                <div className="mb-3">{avatarEl('sm')}</div>
                 <h1 className="font-heading font-bold text-ink text-base leading-tight">
                   {displayName}
                 </h1>

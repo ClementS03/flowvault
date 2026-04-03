@@ -56,8 +56,9 @@ export default function AvatarUpload({
     }
 
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
 
-    const result = await updateAvatarUrl(publicUrl);
+    const result = await updateAvatarUrl(cacheBustedUrl);
     setUploading(false);
 
     if ('error' in result) {
@@ -65,12 +66,13 @@ export default function AvatarUpload({
       return;
     }
 
-    onAvatarChange(publicUrl);
+    onAvatarChange(cacheBustedUrl);
     toast.success('Avatar updated');
   }
 
   async function handleRemove() {
     setUploadError(null);
+    await supabase.storage.from('avatars').remove([`${userId}/avatar`]);
     const result = await updateAvatarUrl(null);
     if ('error' in result) {
       toast.error(result.error);
