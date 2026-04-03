@@ -25,7 +25,6 @@ export default function ClipboardBridge() {
       id="clipboard-bridge"
       ref={ref}
       aria-hidden="true"
-      readOnly
       style={{
         position: "fixed",
         top: "-9999px",

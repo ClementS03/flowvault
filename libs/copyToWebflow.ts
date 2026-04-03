@@ -19,9 +19,14 @@ export function copyToWebflow(json: string, bridgeElement: HTMLTextAreaElement):
     success = true;
   };
 
+  // execCommand('copy') only fires the copy event when there is selected text.
+  // Set a temporary value so select() has something to latch onto.
+  bridgeElement.value = ' ';
   bridgeElement.addEventListener("copy", handleCopy, { once: true });
   bridgeElement.focus();
+  bridgeElement.select();
   document.execCommand("copy");
+  bridgeElement.value = '';
   bridgeElement.blur();
 
   return success;
