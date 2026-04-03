@@ -140,36 +140,16 @@ Voir `CLAUDE.md` section Phase 6. Nécessite une R&D approfondie sur le format X
 
 ## Prochaine action recommandée
 
-**Commencer par Phase 2a (recherche full-text)** — impact immédiat sur l'UX Browse, implémentation simple avec `.ilike()` Supabase, pas besoin de brainstorm.
+**Phase 2b — Social Graph** avec `/brainstorming` avant d'implémenter (questions de vie privée, UX à valider).
+Ou **Phase 3 — Stripe Pro** si la monétisation est prioritaire.
 
-Ensuite **Phase 2b brainstorm** avec `/brainstorming` avant d'implémenter le social graph.
+**Phase 2a (recherche full-text)** : déprioritisée — les filtres catégorie + tag suffisent pour le MVP. À faire plus tard si les utilisateurs le demandent.
 
 ---
 
-## Bugs / dettes techniques à surveiller
+## Dettes techniques — RÉSOLUES ✅
 
-1. **Browse "Something went wrong" en prod** → vérifier logs Vercel avec filtre `[browse]`. Cause probable : colonne `is_temporary` ou table `copies` manquante. SQL à lancer si besoin :
-   ```sql
-   ALTER TABLE public.components ADD COLUMN IF NOT EXISTS is_temporary boolean DEFAULT false;
-   ALTER TABLE public.components ADD COLUMN IF NOT EXISTS expires_at timestamptz;
-   ALTER TABLE public.components ADD COLUMN IF NOT EXISTS password_hash text;
-   ```
-
-2. **Admin dashboard** → passer `plan = 'pro'` en DB pour que la barre de progression disparaisse :
-   ```sql
-   UPDATE profiles SET plan = 'pro' WHERE id = (
-     SELECT id FROM auth.users WHERE email = 'ton@email.com'
-   );
-   ```
-
-3. **Table `copies`** → si elle n'existe pas en prod, les stats de la home échouent silencieusement (try/catch en place, pas de crash). SQL :
-   ```sql
-   CREATE TABLE IF NOT EXISTS public.copies (
-     id uuid default gen_random_uuid() primary key,
-     component_id uuid references public.components on delete cascade not null,
-     user_id uuid references auth.users on delete set null,
-     copied_at timestamptz default now()
-   );
-   ALTER TABLE public.copies ENABLE ROW LEVEL SECURITY;
-   CREATE POLICY "Anyone can insert copy" ON public.copies FOR INSERT WITH CHECK (true);
-   ```
+- ~~Browse "Something went wrong"~~ → DB complète, browse fonctionne en prod ✅
+- ~~Admin plan 'pro'~~ → fait manuellement dans Supabase ✅
+- ~~Colonnes is_temporary / expires_at / password_hash~~ → existent en prod ✅
+- ~~Table copies~~ → existe en prod (stats home affichées) ✅
