@@ -1,90 +1,54 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import supabaseAdmin from "@/libs/supabaseAdmin";
 
-export const dynamic = "force-dynamic";
-
-export default async function LandingPage() {
-  // Fetch a few live stats for social proof
-  let componentCount = 0;
-  let copyCount = 0;
-  try {
-    const [compResult, copyResult] = await Promise.all([
-      supabaseAdmin.from("components").select("*", { count: "exact", head: true }).eq("is_public", true).eq("is_temporary", false),
-      supabaseAdmin.from("copies").select("*", { count: "exact", head: true }),
-    ]);
-    if (compResult.error) console.error("[home] components count error:", compResult.error.message);
-    if (copyResult.error) console.error("[home] copies count error:", copyResult.error.message);
-    componentCount = compResult.count ?? 0;
-    copyCount = copyResult.count ?? 0;
-  } catch (err) {
-    console.error("[home] stats error:", err);
-  }
-
-  const stats = [
-    { value: componentCount, label: "components shared" },
-    { value: copyCount, label: "copies made" },
-  ];
-
+export default function LandingPage() {
   return (
     <>
       <Header />
       <main>
         {/* Hero */}
-        <section className="mx-auto px-[var(--px-site)] py-24 text-center" style={{ maxWidth: "var(--max-width)" }}>
+        <section className="mx-auto px-[var(--px-site)] py-16 sm:py-24 text-center" style={{ maxWidth: "var(--max-width)" }}>
           <div className="inline-flex items-center gap-2 rounded-full bg-accent-bg px-4 py-1.5 text-sm font-medium text-accent mb-6">
             Webflow component marketplace
           </div>
 
-          <h1 className="font-heading text-5xl font-bold text-ink leading-tight mb-6 max-w-3xl mx-auto">
-            Share Webflow components<br />
+          <h1 className="font-heading text-4xl sm:text-5xl font-bold text-ink leading-tight mb-5 max-w-3xl mx-auto">
+            Share Webflow components{' '}
             <span className="text-accent">in one click</span>
           </h1>
 
-          <p className="text-lg text-ink-2 mb-10 max-w-xl mx-auto">
+          <p className="text-base sm:text-lg text-ink-2 mb-10 max-w-xl mx-auto">
             Copy a component from the Webflow Designer, paste it into FlowVault,
             share the link. Anyone can copy it straight back into their project.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <Link
               href="/browse"
-              className="inline-flex items-center justify-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-6 py-3 text-sm transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-6 py-3 text-sm transition-colors"
             >
               Browse components
             </Link>
             <Link
               href="/upload"
-              className="inline-flex items-center justify-center rounded-lg border border-border bg-surface hover:bg-bg text-ink font-medium px-6 py-3 text-sm transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg border border-border bg-surface hover:bg-bg text-ink font-medium px-6 py-3 text-sm transition-colors"
             >
               Share yours
             </Link>
           </div>
-
-          {/* Live stats */}
-          {(componentCount ?? 0) > 0 && (
-            <div className="flex items-center justify-center gap-8 sm:gap-12">
-              {stats.map((s) => (
-                <div key={s.label} className="text-center">
-                  <p className="font-heading text-2xl font-bold text-ink">{s.value.toLocaleString()}</p>
-                  <p className="text-xs text-ink-3 mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </section>
 
         {/* How it works */}
         <section className="bg-surface border-y border-border">
-          <div className="mx-auto px-[var(--px-site)] py-20" style={{ maxWidth: "var(--max-width)" }}>
-            <h2 className="font-heading text-3xl font-bold text-ink text-center mb-3">
+          <div className="mx-auto px-[var(--px-site)] py-16 sm:py-20" style={{ maxWidth: "var(--max-width)" }}>
+            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-ink text-center mb-3">
               How it works
             </h2>
-            <p className="text-ink-2 text-center mb-12 max-w-md mx-auto">
+            <p className="text-ink-2 text-center mb-10 sm:mb-12 max-w-md mx-auto text-sm sm:text-base">
               No plugins, no exports. Just copy, paste, and share.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {[
                 {
                   step: "1",
@@ -117,7 +81,7 @@ export default async function LandingPage() {
                   ),
                 },
               ].map((item) => (
-                <div key={item.step} className="flex flex-col gap-4 p-6 rounded-xl bg-bg border border-border">
+                <div key={item.step} className="flex flex-col gap-4 p-5 sm:p-6 rounded-xl bg-bg border border-border">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-accent-bg text-accent flex items-center justify-center shrink-0">
                       {item.icon}
@@ -135,8 +99,8 @@ export default async function LandingPage() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="mx-auto px-[var(--px-site)] py-20 text-center" style={{ maxWidth: "var(--max-width)" }}>
-          <h2 className="font-heading text-2xl font-bold text-ink mb-3">
+        <section className="mx-auto px-[var(--px-site)] py-16 sm:py-20 text-center" style={{ maxWidth: "var(--max-width)" }}>
+          <h2 className="font-heading text-xl sm:text-2xl font-bold text-ink mb-3">
             Ready to share your first component?
           </h2>
           <p className="text-ink-2 mb-8 max-w-sm mx-auto text-sm">
