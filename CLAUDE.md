@@ -194,8 +194,16 @@ if (profile.plan === 'free' && profile.component_count >= 10) {
 ### Phase 1 — MVP ✅ Spec approuvée
 Auth + Upload + Stockage + Lien de partage + Copy to Webflow + Dashboard basique
 
+### Phase 1b — Profile UX + Avatar ✅ Spec approuvée
+Redesign page profil (layout 2 colonnes desktop / colonne mobile) · Upload avatar custom · Toggle profil privé
+Spec : `docs/superpowers/specs/2026-04-03-profile-ux-avatar-design.md`
+
 ### Phase 2 — Marketplace & Discovery
 Browse complet · Recherche full-text · Filtres (catégorie, tags) · Tri (trending, newest) · Favoris
+
+### Phase 2b — Social Graph
+Follow/unfollow entre utilisateurs · Table `follows` · Composants sauvegardés (`saves`) · Sidebar profil dynamique (following list + saved components) · Compteurs followers/following · Enforcement vie privée dans le browse
+À brainstormer avant implémentation.
 
 ### Phase 3 — Abonnement
 Stripe Pro illimité · Enforcement limites free · Upgrade flow · Portail facturation (ShipFast déjà câblé)
