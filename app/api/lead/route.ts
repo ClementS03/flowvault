@@ -7,8 +7,9 @@ import { cookies } from "next/headers";
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  if (!body.email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!body.email || !EMAIL_RE.test(String(body.email))) {
+    return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
   }
 
   try {

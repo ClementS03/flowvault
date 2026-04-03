@@ -22,10 +22,12 @@ export async function deleteComponent(id: string): Promise<void> {
   }
 
   // 2. Delete DB row first — if this fails, storage is untouched (safe rollback)
+  // user_id check is defense-in-depth on top of the ownership check above
   const { error: deleteError } = await supabaseAdmin
     .from('components')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', session.user.id);
   if (deleteError) throw new Error('Failed to delete component');
 
   // 3. Clean up Storage files (after DB delete so a storage failure doesn't leave a broken component)
