@@ -2,86 +2,95 @@
 
 **Date:** 2026-04-03
 **Status:** Approved
+**Language:** All UI text in English
 
 ---
 
-## Vue d'ensemble
+## Overview
 
-Le flow upload est le cœur de FlowVault. Il permet à n'importe qui (connecté ou non) de coller un composant Webflow, de le configurer, et d'obtenir immédiatement un lien de partage + bouton "Copy to Webflow" — sans friction. La connexion est proposée ensuite pour stocker le composant de façon permanente.
+The upload flow is the core of FlowVault. Anyone (logged in or not) can paste a Webflow component, configure it, and immediately get a share link + "Copy to Webflow" button — no friction. Sign-in is offered afterwards to store the component permanently.
 
 ---
 
-## Flow complet
+## Full flow
 
 ```
 /upload
-  └─ Paste détecté (event paste, MIME application/json, type @webflow/XscpData)
-       └─ Slide-over s'ouvre (form de configuration)
-            └─ Submit form
-                 ├─ [non connecté] → crée un composant temporaire (DB, expires 24h)
+  └─ Paste detected (paste event, MIME application/json, type @webflow/XscpData)
+       └─ Slide-over opens (configuration form)
+            └─ Form submit
+                 ├─ [not logged in] → create temporary component (DB, expires 24h)
                  │                  → redirect /upload/result?slug=xxx
-                 │                      Page résultat :
-                 │                        [card composant] | OR | [form sign-in]
-                 │                        Si sign-in réussi → composant associé à l'user
-                 │                                          → redirect /dashboard
-                 └─ [connecté]     → crée composant permanent en DB
-                                   → redirect /c/[slug]
+                 │                      Result page:
+                 │                        [component card] | OR | [sign-in form]
+                 │                        On sign-in success → component claimed by user
+                 │                                           → redirect /dashboard
+                 └─ [logged in]     → create permanent component in DB
+                                    → redirect /c/[slug]
 ```
 
 ---
 
-## Étape 1 — Zone de paste (`/upload`)
+## Step 1 — Paste zone (`/upload`)
 
-### Comportement
-- Page protégée côté client (non serveur) : accessible sans auth, mais le form est disponible à tout le monde pour tester.
-- La zone de paste écoute l'événement `paste` sur `window` (pas uniquement sur le div).
-- Validation : `clipboardData.getData('application/json')` → parse JSON → vérifie `data.type === '@webflow/XscpData'`.
-- Si invalide : toast d'erreur "Ce n'est pas un composant Webflow valide".
-- Si valide : ouvre le slide-over avec le JSON stocké dans le state React.
+### Behavior
+- Accessible without auth — anyone can test the upload flow.
+- Paste zone listens to the `paste` event on `window` (not just the div).
+- Validation: `clipboardData.getData('application/json')` → parse JSON → check `data.type === '@webflow/XscpData'`.
+- If invalid: error toast "That doesn't look like a Webflow component. Copy an element from the Designer first."
+- If valid: open slide-over with JSON stored in React state.
 
-### UI
-- Zone de paste centrée, border dashed, hover state indigo.
-- Texte : "Copie un composant depuis Webflow Designer (Ctrl+C) puis colle-le ici (Ctrl+V)"
-- Indicateur animé quand le paste est détecté.
+### UI text
+- Heading: "Upload a component"
+- Subtitle: "Copy any element from the Webflow Designer (Ctrl+C), then paste it here (Ctrl+V)"
+- Paste zone: "Paste your Webflow component here" / "Press Ctrl+V after copying from the Designer"
+- Success state: "Component detected — {N} elements"
 
 ---
 
-## Étape 2 — Slide-over de configuration
+## Step 2 — Configuration slide-over
 
-### Comportement
-- S'ouvre depuis la droite sur desktop (width ~480px), plein écran sur mobile.
-- Fond de page assombri (overlay semi-transparent, click outside = ferme + reset).
-- Fermeture = perte du JSON (l'user doit recoller).
+### Behavior
+- Opens from the right on desktop (width ~480px), full-screen on mobile.
+- Semi-transparent overlay behind it; click outside = close + reset.
+- Closing loses the JSON (user must paste again).
 
-### Champs du formulaire
+### Form fields
 
-| Champ | Type | Requis | Notes |
+| Field | Type | Required | Notes |
 |---|---|---|---|
-| `name` | text | Oui | max 60 chars |
-| `description` | textarea | Non | max 200 chars |
-| `category` | select | Non | hero, navbar, pricing, footer, feature, card, other |
-| `tags` | text (séparés par virgule) | Non | max 5 tags |
-| `preview_image` | file upload | Non | JPEG/PNG, max 2MB, preview immédiate |
-| `is_public` | toggle switch | Oui | défaut: true |
-| `password` | text (conditionnel) | Non | visible si is_public = false |
+| `name` | text | Yes | max 60 chars |
+| `description` | textarea | No | max 200 chars |
+| `category` | select | No | hero, navbar, pricing, footer, feature, card, other |
+| `tags` | text (comma-separated) | No | max 5 tags |
+| `preview_image` | file upload | No | JPEG/PNG, max 2MB, immediate preview |
+| `is_public` | toggle switch | Yes | default: true |
+| `password` | text (conditional) | No | shown only when is_public = false |
+
+### UI text
+- Slide-over title: "Configure your component"
+- Submit button (logged in): "Publish component"
+- Submit button (not logged in): "Get share link"
+- Password field label: "Password protect"
+- Password field placeholder: "Set a password"
+- is_public label: "Make public"
 
 ### Submit
-- Bouton "Publier le composant"
-- Si is_public = false et password renseigné : le mot de passe est hashé (bcrypt) côté serveur avant stockage.
-- Server Action : `createComponent(formData, json, userId | null)`
+- If is_public = false and password provided: hash password (bcrypt) server-side before storing.
+- Server Action: `createComponent(formData, json, userId | null)`
 
 ---
 
-## Étape 3 — Stockage temporaire (utilisateur non connecté)
+## Step 3 — Temporary storage (unauthenticated user)
 
 ### DB
-Ajout de deux colonnes à la table `components` :
+Two new columns on the `components` table:
 ```sql
-is_temporary  boolean  default false
+is_temporary  boolean      default false
 expires_at    timestamptz  nullable
 ```
 
-### Logique Server Action
+### Server Action logic
 ```
 if (userId) {
   INSERT components { user_id, ..., is_temporary: false, expires_at: null }
@@ -93,91 +102,97 @@ if (userId) {
 ```
 
 ### RLS
-- Policy "Anyone can insert" : `with check (true)` — permet les inserts sans auth.
-- Policy "Public read temp" : `using (is_public = true OR expires_at > now())`.
-- Policy "Own read" : `using (auth.uid() = user_id)`.
+- Policy "Anyone can insert": `with check (true)` — allows inserts without auth.
+- Policy "Public read": `using (is_public = true OR expires_at > now())`.
+- Policy "Own read": `using (auth.uid() = user_id)`.
 
 ### Cleanup
-- Un job Supabase (pg_cron) supprime les composants temporaires expirés toutes les heures :
-  ```sql
-  DELETE FROM components WHERE is_temporary = true AND expires_at < now();
-  ```
+Supabase pg_cron job — runs every hour:
+```sql
+DELETE FROM components WHERE is_temporary = true AND expires_at < now();
+```
 
 ---
 
-## Étape 4 — Page résultat (`/upload/result?slug=xxx`)
+## Step 4 — Result page (`/upload/result?slug=xxx`)
 
-### Layout desktop
+### Desktop layout
 ```
 ┌─────────────────────┬────┬─────────────────────┐
-│   Card composant    │ OR │   Form sign-in       │
+│   Component card    │ OR │   Sign-in form       │
 │                     │    │                      │
 │  [Preview image]    │    │  • Google button     │
-│  Nom du composant   │    │  • ─── ou ───        │
-│  [Lien de partage]  │    │  • Email magic link  │
+│  Component name     │    │  • ─── or ───        │
+│  [Share link]       │    │  • Magic link email  │
 │  [Copy to Webflow]  │    │                      │
-│  ⚠ Expire dans 24h  │    │  Avantages connexion │
+│  ⚠ Expires in ~24h  │    │  Benefits list       │
 └─────────────────────┴────┴─────────────────────┘
 ```
 
-### Layout mobile
-- Card composant en haut.
-- Divider "— OU —" horizontal.
-- Form sign-in en bas.
+### Mobile layout
+- Component card on top.
+- Horizontal "— OR —" divider.
+- Sign-in form below.
 
-### Card composant
-- Preview image (si fournie) ou placeholder générique.
-- Nom + catégorie.
-- Champ "Lien de partage" avec bouton copy-to-clipboard.
-- Bouton "Copy to Webflow" (fonctionnel, utilise `copyToWebflow.ts`).
-- Badge / texte discret : "Lien temporaire — expire dans ~24h. Connecte-toi pour le stocker."
+### Component card UI text
+- "Your component is ready"
+- Share link field with copy-to-clipboard button ("Copy link")
+- Primary button: "Copy to Webflow"
+- Expiry notice: "This link expires in ~24h. Sign in to store it permanently."
 
-### Après sign-in sur cette page
-- Le callback auth (`/api/auth/callback`) reçoit le slug en query param via `redirectTo`.
-- Après échange de code, Server Action `claimComponent(slug, userId)` :
+### Sign-in panel UI text
+- Title: "Save it forever"
+- Benefits:
+  - "Permanent share link"
+  - "Track how many times it's been copied"
+  - "Up to 10 free components"
+- Google button: "Continue with Google"
+- Magic link button: "Send Magic Link"
+
+### After sign-in on this page
+- Auth callback (`/api/auth/callback`) receives the slug via `redirectTo` query param.
+- After code exchange, Server Action `claimComponent(slug, userId)`:
   - `UPDATE components SET user_id = userId, is_temporary = false, expires_at = null WHERE slug = slug AND user_id IS NULL`
 - Redirect `/dashboard`.
 
 ---
 
-## Étape 5 — Utilisateur déjà connecté
+## Step 5 — Logged-in user
 
-- Le slide-over détecte la session (client-side via `useSession`).
-- Le bouton submit dit "Publier" (pas "Tester sans compte").
-- Après submit → redirect direct vers `/c/[slug]` (page publique du composant).
-- Pas de page résultat intermédiaire.
+- Slide-over detects session client-side (Supabase `createClientComponentClient`).
+- Submit button shows "Publish component".
+- After submit → redirect directly to `/c/[slug]`.
+- No intermediate result page.
 
 ---
 
-## Composants et fichiers à créer/modifier
+## Files to create / modify
 
-| Fichier | Rôle |
+| File | Role |
 |---|---|
-| `app/upload/page.tsx` | Zone de paste (client component), écoute paste event |
-| `components/UploadSlideOver.tsx` | Slide-over avec form + preview image |
-| `app/upload/result/page.tsx` | Page résultat (card + OR + signin) |
-| `app/actions/createComponent.ts` | Server Action : validation, storage, insert DB |
-| `app/actions/claimComponent.ts` | Server Action : associer composant temp à user |
-| `app/api/auth/callback/route.ts` | Modifier pour passer le slug si présent en param |
-| `libs/slugify.ts` | Génère `{name-slug}-{6chars}` |
-| `libs/hashPassword.ts` | bcrypt hash du mot de passe |
+| `app/upload/page.tsx` | Paste zone (client component), window paste event |
+| `components/UploadSlideOver.tsx` | Slide-over with form + image preview |
+| `app/upload/result/page.tsx` | Result page (card + OR + sign-in) |
+| `app/actions/createComponent.ts` | Server Action: validate, store JSON, insert DB |
+| `app/actions/claimComponent.ts` | Server Action: link temp component to user |
+| `app/api/auth/callback/route.ts` | Pass slug param through if present |
+| `libs/slugify.ts` | Generate `{name-slug}-{6chars}` |
+| `libs/hashPassword.ts` | bcrypt hash for password protection |
 
 ---
 
-## Schéma DB (delta)
+## DB schema (delta)
 
 ```sql
--- Ajout colonnes components
 ALTER TABLE public.components
   ADD COLUMN is_temporary boolean DEFAULT false,
   ADD COLUMN expires_at timestamptz;
 
--- Policy insert anonymous
 CREATE POLICY "Anyone can insert component"
   ON public.components FOR INSERT
   WITH CHECK (true);
 
--- Cleanup job (pg_cron - activer dans Supabase dashboard)
+-- pg_cron cleanup (enable extension in Supabase dashboard first)
 SELECT cron.schedule(
   'cleanup-temp-components',
   '0 * * * *',
@@ -187,11 +202,11 @@ SELECT cron.schedule(
 
 ---
 
-## Points de vigilance
+## Watch out
 
-- **Paste event** : écouter sur `window`, pas sur un div spécifique. Bloquer si un `<input>` ou `<textarea>` est focus pour éviter les conflits.
-- **Slide-over mobile** : `position: fixed; inset: 0` sur mobile (< 768px), `position: fixed; right: 0; top: 0; bottom: 0; width: 480px` sur desktop.
-- **Image preview** : stocker dans Supabase Storage bucket `component-previews` (public), path `{component_id}.jpg`. Si aucune image fournie → placeholder générique.
-- **Password** : ne jamais stocker en clair. Hash bcrypt server-side dans la Server Action.
-- **Claim callback** : si le slug n'est pas dans les query params du callback, comportement normal (redirect `/dashboard`).
-- **RLS** : la policy "Anyone can insert" doit être limitée aux champs contrôlés — ne jamais laisser le client définir `user_id` directement.
+- **Paste event**: listen on `window`. Skip if an `<input>` or `<textarea>` is focused to avoid conflicts.
+- **Slide-over mobile**: `position: fixed; inset: 0` on mobile (< 768px), `right: 0; top: 0; bottom: 0; width: 480px` on desktop.
+- **Image storage**: Supabase Storage bucket `component-previews` (public), path `{component_id}.jpg`. No image provided → generic placeholder.
+- **Password**: never store plaintext. Hash bcrypt server-side in the Server Action.
+- **Claim callback**: if no slug in the callback query params, normal behavior (redirect `/dashboard`).
+- **RLS**: the "Anyone can insert" policy must not allow the client to set `user_id` directly — enforce it server-side only.
