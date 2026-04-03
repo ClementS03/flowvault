@@ -34,14 +34,15 @@ export async function createComponent(
   if (!name) throw new Error('Component name is required');
   if (name.length > 60) throw new Error('Name must be 60 characters or less');
 
-  // Validate Webflow JSON
+  // Validate Webflow JSON — split so inner parse error isn't swallowed by type check
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(jsonString);
-    if (parsed.type !== '@webflow/XscpData') {
-      throw new Error('Invalid Webflow component data');
-    }
+    parsed = JSON.parse(jsonString);
   } catch {
     throw new Error('Invalid component JSON');
+  }
+  if ((parsed as { type?: string })?.type !== '@webflow/XscpData') {
+    throw new Error('Invalid Webflow component data');
   }
 
   const componentId = crypto.randomUUID();
@@ -62,21 +63,32 @@ export async function createComponent(
 
   // Upload preview image if provided
   let imageUrl: string | null = null;
+  let imagePath: string | null = null;
+
   if (imageFile && imageFile.size > 0) {
-    const imagePath = `${componentId}.jpg`;
+    if (imageFile.size > 2 * 1024 * 1024) {
+      throw new Error('Preview image must be under 2MB');
+    }
+
+    const ext = imageFile.type === 'image/png' ? 'png' : 'jpg';
+    const candidatePath = `${componentId}.${ext}`;
+
     const { error: imgError } = await supabaseAdmin.storage
       .from('component-previews')
-      .upload(imagePath, imageFile, {
+      .upload(candidatePath, imageFile, {
         contentType: imageFile.type,
         upsert: true,
       });
 
-    if (!imgError) {
+    if (imgError) {
+      console.error('[createComponent] Preview image upload failed:', imgError.message);
+    } else {
+      imagePath = candidatePath;
       const {
         data: { publicUrl },
       } = supabaseAdmin.storage
         .from('component-previews')
-        .getPublicUrl(imagePath);
+        .getPublicUrl(candidatePath);
       imageUrl = publicUrl;
     }
   }
@@ -85,6 +97,19 @@ export async function createComponent(
   let passwordHash: string | null = null;
   if (!isPublic && passwordRaw) {
     passwordHash = await hashPassword(passwordRaw);
+  }
+
+  // Enforce free plan limit
+  if (userId) {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('component_count, plan')
+      .eq('id', userId)
+      .single();
+
+    if (profile?.plan === 'free' && (profile?.component_count ?? 0) >= 10) {
+      throw new Error('Free plan limit reached. Upgrade to Pro for unlimited components.');
+    }
   }
 
   // Insert component row
@@ -112,7 +137,12 @@ export async function createComponent(
 
   if (insertError) {
     // Clean up storage on DB failure
-    await supabaseAdmin.storage.from('components-json').remove([jsonPath]);
+    await Promise.all([
+      supabaseAdmin.storage.from('components-json').remove([jsonPath]),
+      imagePath
+        ? supabaseAdmin.storage.from('component-previews').remove([imagePath])
+        : Promise.resolve(),
+    ]);
     throw new Error('Failed to save component');
   }
 
