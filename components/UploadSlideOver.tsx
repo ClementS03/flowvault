@@ -39,6 +39,13 @@ export default function UploadSlideOver({ json, onClose }: Props) {
     });
   }, [supabase]);
 
+  // Revoke blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -46,6 +53,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
       toast.error('Image must be under 2MB');
       return;
     }
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     const url = URL.createObjectURL(file);
     setImagePreview(url);
   }
@@ -58,6 +66,16 @@ export default function UploadSlideOver({ json, onClose }: Props) {
     try {
       const formData = new FormData(e.currentTarget);
       formData.set('is_public', String(isPublic));
+
+      // Validate tags max-5 client-side (server also enforces this)
+      const tagsRaw = (formData.get('tags') as string) || '';
+      const tagCount = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean).length;
+      if (tagCount > 5) {
+        toast.error('Maximum 5 tags allowed');
+        setIsSubmitting(false);
+        return;
+      }
+
       const { slug } = await createComponent(formData, json);
       router.push(isLoggedIn ? `/c/${slug}` : `/upload/result?slug=${slug}`);
     } catch (err: unknown) {
