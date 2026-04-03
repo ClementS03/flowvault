@@ -30,26 +30,29 @@ const ButtonSignin = ({
   }, [supabase]);
 
   if (user) {
+    const fullName = user?.user_metadata?.name || "";
+    const firstName = fullName.split(" ")[0] || user?.email?.split("@")[0] || "Account";
+
     return (
       <Link
         href={config.auth.callbackUrl}
-        className={`btn ${extraStyle ? extraStyle : ""}`}
+        className={`flex items-center gap-2 ${extraStyle ? extraStyle : ""}`}
       >
         {user?.user_metadata?.avatar_url ? (
           <img
             src={user?.user_metadata?.avatar_url}
-            alt={user?.user_metadata?.name || "Account"}
+            alt={firstName}
             className="w-6 h-6 rounded-full shrink-0"
             referrerPolicy="no-referrer"
             width={24}
             height={24}
           />
         ) : (
-          <span className="w-6 h-6 bg-base-300 flex justify-center items-center rounded-full shrink-0">
-            {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0)}
+          <span className="w-6 h-6 bg-accent-bg text-accent text-xs font-medium flex items-center justify-center rounded-full shrink-0">
+            {firstName.charAt(0).toUpperCase()}
           </span>
         )}
-        {user?.user_metadata?.name || user?.email || "Account"}
+        <span className="text-sm font-medium text-ink truncate max-w-[100px]">{firstName}</span>
       </Link>
     );
   }
