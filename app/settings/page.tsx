@@ -18,7 +18,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('display_name, username, bio, website, avatar_url, plan')
+    .select('display_name, username, bio, website, avatar_url, plan, is_private')
     .eq('id', userId)
     .single();
 
@@ -46,6 +46,7 @@ export default async function SettingsPage() {
           initialBio={profile?.bio ?? ''}
           initialWebsite={profile?.website ?? ''}
           avatarUrl={avatarUrl}
+          initialIsPrivate={profile?.is_private ?? false}
         />
       </main>
       <Footer />

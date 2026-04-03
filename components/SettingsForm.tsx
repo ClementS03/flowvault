@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import toast from 'react-hot-toast';
 import { updateProfile } from '@/app/actions/updateProfile';
+import AvatarUpload from '@/components/AvatarUpload';
+import PrivacyToggle from '@/components/PrivacyToggle';
 
 interface SettingsFormProps {
   userId: string;
@@ -15,9 +17,11 @@ interface SettingsFormProps {
   initialBio: string;
   initialWebsite: string;
   avatarUrl: string | null;
+  initialIsPrivate: boolean;
 }
 
 export default function SettingsForm({
+  userId,
   email,
   plan,
   initialDisplayName,
@@ -25,11 +29,15 @@ export default function SettingsForm({
   initialBio,
   initialWebsite,
   avatarUrl,
+  initialIsPrivate,
 }: SettingsFormProps) {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [isPending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
+
+  // Live avatar URL — updated immediately after upload without page reload
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
 
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [username, setUsername] = useState(initialUsername);
@@ -61,20 +69,6 @@ export default function SettingsForm({
 
   const initials = (displayName || email).charAt(0).toUpperCase();
 
-  const avatarEl = avatarUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={avatarUrl}
-      alt={displayName || email}
-      className="w-16 h-16 rounded-full object-cover"
-      referrerPolicy="no-referrer"
-    />
-  ) : (
-    <div className="w-16 h-16 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-xl">
-      {initials}
-    </div>
-  );
-
   return (
     <div className="flex flex-col gap-6 max-w-xl">
       {/* Profile section */}
@@ -93,11 +87,13 @@ export default function SettingsForm({
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {/* Avatar */}
-            <div className="flex items-center gap-4">
-              {avatarEl}
-              <p className="text-xs text-ink-3">Avatar is set from your Google account.</p>
-            </div>
+            {/* Avatar upload */}
+            <AvatarUpload
+              userId={userId}
+              avatarUrl={currentAvatarUrl}
+              displayName={displayName || email}
+              onAvatarChange={setCurrentAvatarUrl}
+            />
 
             {/* Display name */}
             <div>
@@ -127,7 +123,9 @@ export default function SettingsForm({
                 name="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                onChange={(e) =>
+                  setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                }
                 maxLength={30}
                 placeholder="your-username"
                 className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
@@ -202,12 +200,27 @@ export default function SettingsForm({
         ) : (
           <div className="flex flex-col gap-5">
             <div className="flex items-center gap-4">
-              {avatarEl}
+              {/* Avatar preview — uses live currentAvatarUrl */}
+              {currentAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentAvatarUrl}
+                  alt={displayName || email}
+                  className="w-16 h-16 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-xl">
+                  {initials}
+                </div>
+              )}
               <div>
                 <p className="font-medium text-ink">
                   {displayName || <span className="text-ink-3">No display name set</span>}
                 </p>
-                {username && <p className="text-sm text-ink-3 mt-0.5">@{username}</p>}
+                {username && (
+                  <p className="text-sm text-ink-3 mt-0.5">@{username}</p>
+                )}
               </div>
             </div>
 
@@ -255,12 +268,21 @@ export default function SettingsForm({
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-ink capitalize">{plan}</span>
               {plan === 'free' && (
-                <a href="/pricing" className="text-xs text-accent hover:text-accent-h font-medium transition-colors">
+                <a
+                  href="/pricing"
+                  className="text-xs text-accent hover:text-accent-h font-medium transition-colors"
+                >
                   Upgrade →
                 </a>
               )}
             </div>
           </div>
+
+          {/* Privacy toggle */}
+          <div className="pt-2 border-t border-border">
+            <PrivacyToggle initialIsPrivate={initialIsPrivate} />
+          </div>
+
           <div className="pt-2 border-t border-border flex justify-end">
             <button
               onClick={handleSignOut}
