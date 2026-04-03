@@ -214,6 +214,24 @@ Preview visuel des composants · Collections · Analytics créateur · Embed wid
 ### Phase 5 — Rewards
 Système de récompenses : badges créateur · Commissions sur copies · Limites boostées pour contributeurs actifs
 
+### Phase 6 — HTML/CSS/JS → Webflow (futur lointain)
+Convertisseur HTML+CSS+JS en composant Webflow, inspiré de moden.io.
+
+**UX envisagée :**
+- Page `/convert` avec 3 onglets : HTML · CSS · JavaScript
+- L'utilisateur colle son code dans chaque onglet
+- Un bouton "Convert to Webflow" envoie le code à un service de conversion
+- Le résultat est un JSON XscpData valide, copiable directement dans le Designer
+
+**Complexité :**
+Cette fonctionnalité nécessite un moteur de conversion HTML→XscpData (Webflow's internal JSON format).
+Références : moden.io fait cette conversion côté serveur. Il n'existe pas d'API officielle Webflow pour ça.
+Pistes : parser le DOM HTML, mapper les éléments aux éléments Webflow (div, text, image, link…),
+générer les styles sous forme de classes Webflow, construire l'arbre XscpData.
+
+**À brainstormer avant d'implémenter.** Cette feature dépasse le scope des phases précédentes et
+nécessite une R&D approfondie sur le format XscpData.
+
 ---
 
 ## Points de vigilance
