@@ -17,6 +17,7 @@
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/supabase-js": "^2.41.1",
     "axios": "^1.6.8",
+    "bcryptjs": "^3.0.3",
     "crisp-sdk-web": "^1.0.22",
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.19",
@@ -36,6 +37,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.12",
     "@types/mdx": "^2.0.12",
     "@types/mongoose": "^5.11.97",
