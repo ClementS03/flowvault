@@ -68,6 +68,7 @@ export async function updateProfile(formData: FormData): Promise<UpdateProfileRe
       website: website
         ? website.startsWith('http') ? website : `https://${website}`
         : null,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', userId);
 

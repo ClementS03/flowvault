@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { redirect } from 'next/navigation';
+import config from '@/config';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SettingsForm from '@/components/SettingsForm';
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function SettingsPage() {
   const supabase = createServerComponentClient({ cookies });
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/signin');
+  if (!session) redirect(config.auth.loginUrl);
 
   const userId = session.user.id;
 
