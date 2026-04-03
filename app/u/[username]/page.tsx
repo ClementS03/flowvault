@@ -26,11 +26,11 @@ export default async function UserProfilePage({ params }: Props) {
 
   const avatarEl = (size: 'sm' | 'lg') => {
     const cls = size === 'lg'
-      ? 'w-16 h-16 rounded-full object-cover'
-      : 'w-20 h-20 rounded-full object-cover';
+      ? 'w-20 h-20 rounded-full object-cover'
+      : 'w-16 h-16 rounded-full object-cover';
     const initCls = size === 'lg'
-      ? 'w-16 h-16 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-xl'
-      : 'w-20 h-20 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-2xl';
+      ? 'w-20 h-20 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-2xl'
+      : 'w-16 h-16 rounded-full bg-accent-bg flex items-center justify-center text-accent font-heading font-bold text-xl';
 
     return profile.avatar_url ? (
       // eslint-disable-next-line @next/next/no-img-element
@@ -93,7 +93,7 @@ export default async function UserProfilePage({ params }: Props) {
           {/* Sidebar */}
           <aside className="w-full md:w-56 flex-shrink-0 flex flex-col gap-4">
             {/* Profile card */}
-            <div className="rounded-xl border border-border bg-white p-5">
+            <div className="rounded-xl border border-border bg-surface p-5">
               <div className="flex flex-col items-center md:items-start text-center md:text-left gap-1">
                 <div className="mb-3">{avatarEl('lg')}</div>
                 <h1 className="font-heading font-bold text-ink text-base leading-tight">
@@ -117,7 +117,7 @@ export default async function UserProfilePage({ params }: Props) {
             </div>
 
             {/* Stats card */}
-            <div className="rounded-xl border border-border bg-white p-5">
+            <div className="rounded-xl border border-border bg-surface p-5">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-ink-2">Components</span>
@@ -145,7 +145,7 @@ export default async function UserProfilePage({ params }: Props) {
               Public components
             </p>
             {components && components.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {components.map((c) => (
                   <ProfileComponentCard
                     key={c.id}
