@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 
 export default async function BrowsePage() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-bg">
       <Header />
-      <main className="mx-auto px-[var(--px-site)] py-16" style={{ maxWidth: "var(--max-width)" }}>
+      <main className="flex-1 mx-auto w-full px-[var(--px-site)] py-16" style={{ maxWidth: "var(--max-width)" }}>
         <div className="mb-10">
           <h1 className="font-heading text-3xl font-bold text-ink mb-2">Browse components</h1>
           <p className="text-ink-2">Discover and copy Webflow components from the community</p>
@@ -25,6 +25,6 @@ export default async function BrowsePage() {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
