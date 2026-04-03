@@ -1,4 +1,3 @@
-// app/actions/deleteComponent.ts
 'use server';
 
 import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
@@ -22,15 +21,26 @@ export async function deleteComponent(id: string): Promise<void> {
     throw new Error('Unauthorized');
   }
 
-  // 2. Delete Storage files in parallel (JSON + preview image — try both .jpg and .png)
+  // 2. Delete DB row first — if this fails, storage is untouched (safe rollback)
+  const { error: deleteError } = await supabaseAdmin
+    .from('components')
+    .delete()
+    .eq('id', id);
+  if (deleteError) throw new Error('Failed to delete component');
+
+  // 3. Clean up Storage files (after DB delete so a storage failure doesn't leave a broken component)
+  // JSON removal: log on failure (orphaned blob, not critical — no user-visible impact)
+  const { error: jsonError } = await supabaseAdmin.storage
+    .from('components-json')
+    .remove([component.json_path]);
+  if (jsonError) {
+    console.error('[deleteComponent] Failed to remove JSON from storage:', jsonError.message);
+  }
+  // Preview image: try both extensions — one will 404, errors are expected and intentionally ignored
   await Promise.all([
-    supabaseAdmin.storage.from('components-json').remove([component.json_path]),
     supabaseAdmin.storage.from('component-previews').remove([`${id}.jpg`]),
     supabaseAdmin.storage.from('component-previews').remove([`${id}.png`]),
   ]);
-
-  // 3. Delete DB row
-  await supabaseAdmin.from('components').delete().eq('id', id);
 
   // 4. Decrement component_count
   const { data: profile } = await supabaseAdmin
