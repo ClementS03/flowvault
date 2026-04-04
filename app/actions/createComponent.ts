@@ -60,7 +60,7 @@ export async function createComponent(
 
     const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
     if (!isAdmin && profile?.plan === 'free' && (profile?.component_count ?? 0) >= 10) {
-      throw new Error('Free plan limit reached. Upgrade to Pro for unlimited components.');
+      throw new Error('FREE_LIMIT_REACHED');
     }
     currentComponentCount = profile?.component_count ?? 0;
   }
