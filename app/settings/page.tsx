@@ -47,7 +47,7 @@ export default async function SettingsPage() {
           initialBio={profile?.bio ?? ''}
           initialWebsite={profile?.website ?? ''}
           avatarUrl={avatarUrl}
-          initialIsPrivate={profile?.is_private ?? false}
+          initialIsPrivate={profile?.is_private ?? true}
         />
 
         {/* Danger zone */}
