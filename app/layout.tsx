@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Space_Grotesk, Inter } from "next/font/google";
 import { Viewport } from "next";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import ClipboardBridge from "@/components/ClipboardBridge";
