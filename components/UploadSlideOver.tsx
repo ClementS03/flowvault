@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { createComponent } from '@/app/actions/createComponent';
 import { setUsername } from '@/app/actions/setUsername';
+import UpgradeModal from '@/components/UpgradeModal';
 
 const CATEGORIES = [
   { value: '', label: 'No category' },
@@ -34,6 +35,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
   const [isPublic, setIsPublic] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Username step state
   const [usernameInput, setUsernameInput] = useState('');
@@ -134,7 +136,11 @@ export default function UploadSlideOver({ json, onClose }: Props) {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
-      toast.error(message);
+      if (message === 'FREE_LIMIT_REACHED') {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(message);
+      }
       setIsSubmitting(false);
     }
   }
@@ -428,6 +434,9 @@ export default function UploadSlideOver({ json, onClose }: Props) {
           </form>
         )}
       </div>
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
+      )}
     </>
   );
 }

@@ -2,110 +2,221 @@ import Link from "next/link";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
 
-// CHATGPT PROMPT TO GENERATE YOUR PRIVACY POLICY — replace with your own data 👇
-
-// 1. Go to https://chat.openai.com/
-// 2. Copy paste bellow
-// 3. Replace the data with your own (if needed)
-// 4. Paste the answer from ChatGPT directly in the <pre> tag below
-
-// You are an excellent lawyer.
-
-// I need your help to write a simple privacy policy for my website. Here is some context:
-// - Website: https://shipfa.st
-// - Name: ShipFast
-// - Description: A JavaScript code boilerplate to help entrepreneurs launch their startups faster
-// - User data collected: name, email and payment information
-// - Non-personal data collection: web cookies
-// - Purpose of Data Collection: Order processing
-// - Data sharing: we do not share the data with any other parties
-// - Children's Privacy: we do not collect any data from children
-// - Updates to the Privacy Policy: users will be updated by email
-// - Contact information: marc@shipfa.st
-
-// Please write a simple privacy policy for my site. Add the current date.  Do not add or explain your reasoning. Answer:
-
 export const metadata = getSEOTags({
   title: `Privacy Policy | ${config.appName}`,
   canonicalUrlRelative: "/privacy-policy",
 });
 
-const PrivacyPolicy = () => {
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <section className="mb-10">
+    <h2 className="font-heading font-semibold text-xl text-ink mb-4">{title}</h2>
+    <div className="space-y-3 text-sm text-ink-2 leading-relaxed">{children}</div>
+  </section>
+);
+
+export default function PrivacyPolicy() {
   return (
-    <main className="max-w-xl mx-auto">
-      <div className="p-5">
-        <Link href="/" className="btn btn-ghost">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="w-5 h-5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M15 10a.75.75 0 01-.75.75H7.612l2.158 1.96a.75.75 0 11-1.04 1.08l-3.5-3.25a.75.75 0 010-1.08l3.5-3.25a.75.75 0 111.04 1.08L7.612 9.25h6.638A.75.75 0 0115 10z"
-              clipRule="evenodd"
-            />
-          </svg>{" "}
+    <main className="min-h-screen bg-bg">
+      <div className="mx-auto max-w-2xl px-6 py-16">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-ink-3 hover:text-ink transition-colors mb-10"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+            <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+          </svg>
           Back
         </Link>
-        <h1 className="text-3xl font-extrabold pb-6">
-          Privacy Policy for {config.appName}
-        </h1>
 
-        <pre
-          className="leading-relaxed whitespace-pre-wrap"
-          style={{ fontFamily: "sans-serif" }}
-        >
-          {`Last Updated: 2023-08-25
+        <div className="mb-10">
+          <h1 className="font-heading font-bold text-3xl text-ink mb-2">Privacy Policy</h1>
+          <p className="text-sm text-ink-3">Last updated: April 4, 2026</p>
+        </div>
 
-Thank you for visiting ShipFast ("we," "us," or "our"). This Privacy Policy outlines how we collect, use, and protect your personal and non-personal information when you use our website located at https://shipfa.st (the "Website").
+        <Section title="1. Who we are">
+          <p>
+            FlowVault is operated by Clément Seguin, auto-entrepreneur registered in France
+            (SIRET 909 969 685 00025), 9 rue Marie Angèle Cléret, 03130 Montcombroux-les-Mines.
+          </p>
+          <p>
+            Contact: <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>
+          </p>
+          <p>
+            As data controller, Clément Seguin is responsible for the personal data collected
+            through <strong>flowvault.io</strong> (the "Service").
+          </p>
+        </Section>
 
-By accessing or using the Website, you agree to the terms of this Privacy Policy. If you do not agree with the practices described in this policy, please do not use the Website.
+        <Section title="2. Data we collect">
+          <p>We collect only what is strictly necessary to provide the Service:</p>
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li>
+              <strong>Account data</strong> — email address, name and profile picture (when you
+              sign in via Google OAuth or Magic Link).
+            </li>
+            <li>
+              <strong>Profile data</strong> — username you choose, your subscription plan
+              (free / pro), component count, optional avatar you upload.
+            </li>
+            <li>
+              <strong>Component data</strong> — component name, description, category, tags,
+              Webflow JSON payload, optional preview image, visibility settings, password hash
+              (if you password-protect a component).
+            </li>
+            <li>
+              <strong>Usage data</strong> — when a component is copied, we log the component ID
+              and, if you are logged in, your user ID. This powers the copy-count displayed on
+              each component.
+            </li>
+            <li>
+              <strong>Payment data</strong> — your Stripe customer ID. We do <strong>not</strong>{" "}
+              store card numbers or banking details; these are handled exclusively by Stripe.
+            </li>
+            <li>
+              <strong>Technical data</strong> — server access logs (IP address, browser,
+              timestamp) retained by Vercel for up to 30 days for security and debugging.
+            </li>
+          </ul>
+        </Section>
 
-1. Information We Collect
+        <Section title="3. How we use your data">
+          <p>Your data is used solely to:</p>
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li>Create and manage your account (contractual basis — Art. 6.1.b GDPR)</li>
+            <li>Store, display and share your components (contractual basis)</li>
+            <li>Process your Pro subscription payment via Stripe (contractual basis)</li>
+            <li>Send transactional emails (magic link, billing receipts) via Resend (contractual basis)</li>
+            <li>Measure aggregate, anonymous site traffic via Plausible (legitimate interest — Art. 6.1.f GDPR)</li>
+            <li>Prevent fraud and abuse (legitimate interest)</li>
+          </ul>
+          <p>We do not sell your data. We do not use your data for advertising.</p>
+        </Section>
 
-1.1 Personal Data
+        <Section title="4. Cookies and tracking">
+          <p>
+            FlowVault uses <strong>no advertising or tracking cookies</strong>.
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li>
+              <strong>Session cookie</strong> — Supabase sets a short-lived session cookie
+              strictly necessary for authentication. No consent is required (essential cookie).
+            </li>
+            <li>
+              <strong>Analytics</strong> — We use{" "}
+              <a href="https://plausible.io" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">Plausible</a>,
+              a privacy-friendly analytics tool that collects no personal data and sets no cookies.
+              No cookie banner is required.
+            </li>
+          </ul>
+        </Section>
 
-We collect the following personal information from you:
+        <Section title="5. Data processors (sub-processors)">
+          <p>
+            We use the following trusted third parties to operate the Service. Each has signed a
+            Data Processing Agreement and provides appropriate GDPR safeguards (Standard
+            Contractual Clauses where data is transferred outside the EU):
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border border-border rounded-lg overflow-hidden mt-2">
+              <thead>
+                <tr className="bg-surface">
+                  <th className="text-left px-3 py-2 font-semibold text-ink">Provider</th>
+                  <th className="text-left px-3 py-2 font-semibold text-ink">Purpose</th>
+                  <th className="text-left px-3 py-2 font-semibold text-ink">Country</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Vercel Inc.", "Hosting & CDN", "USA (SCC)"],
+                  ["Supabase Inc.", "Database, Auth & Storage", "USA/EU (SCC)"],
+                  ["Stripe Inc.", "Payment processing", "USA (SCC, PCI-DSS)"],
+                  ["Resend Inc.", "Transactional email", "USA (SCC)"],
+                  ["Plausible Analytics", "Anonymous traffic analytics", "EU (Lithuania) ✓"],
+                ].map(([provider, purpose, country]) => (
+                  <tr key={provider} className="border-t border-border">
+                    <td className="px-3 py-2 text-ink">{provider}</td>
+                    <td className="px-3 py-2">{purpose}</td>
+                    <td className="px-3 py-2">{country}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Section>
 
-Name: We collect your name to personalize your experience and communicate with you effectively.
-Email: We collect your email address to send you important information regarding your orders, updates, and communication.
-Payment Information: We collect payment details to process your orders securely. However, we do not store your payment information on our servers. Payments are processed by trusted third-party payment processors.
+        <Section title="6. Data retention">
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li>Account and profile data: until you delete your account</li>
+            <li>Components and files: until you delete them or delete your account</li>
+            <li>Copy logs: until account deletion</li>
+            <li>Stripe customer ID: deleted from our database when you delete your account (Stripe retains billing records as required by law)</li>
+            <li>Vercel access logs: 30 days</li>
+            <li>Plausible data: aggregate only, no personal data retained</li>
+          </ul>
+        </Section>
 
-1.2 Non-Personal Data
+        <Section title="7. Your rights (GDPR)">
+          <p>
+            As a data subject under the GDPR, you have the following rights. To exercise any of
+            them, contact us at{" "}
+            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>.
+            We will respond within 30 days.
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li><strong>Right of access</strong> (Art. 15) — request a copy of your data</li>
+            <li><strong>Right to rectification</strong> (Art. 16) — correct inaccurate data via Settings</li>
+            <li>
+              <strong>Right to erasure</strong> (Art. 17) — delete your account and all associated
+              data via Settings → Delete account (immediate and permanent)
+            </li>
+            <li><strong>Right to data portability</strong> (Art. 20) — request a machine-readable export by email</li>
+            <li><strong>Right to object</strong> (Art. 21) — object to processing based on legitimate interest</li>
+            <li>
+              <strong>Right to lodge a complaint</strong> — with the French data protection
+              authority:{" "}
+              <a href="https://www.cnil.fr" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">CNIL</a>{" "}
+              (Commission Nationale de l&apos;Informatique et des Libertés)
+            </li>
+          </ul>
+        </Section>
 
-We may use web cookies and similar technologies to collect non-personal information such as your IP address, browser type, device information, and browsing patterns. This information helps us to enhance your browsing experience, analyze trends, and improve our services.
+        <Section title="8. Data security">
+          <p>
+            We implement appropriate technical and organisational measures to protect your data:
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li>All data is transmitted over HTTPS (TLS 1.2+)</li>
+            <li>Database access is restricted via Row-Level Security (Supabase RLS)</li>
+            <li>Component files in private storage are accessible only via short-lived signed URLs</li>
+            <li>Passwords (for protected components) are hashed — we never store them in plain text</li>
+            <li>Service-role credentials are never exposed client-side</li>
+          </ul>
+        </Section>
 
-2. Purpose of Data Collection
+        <Section title="9. Children's privacy">
+          <p>
+            FlowVault is not directed to children under 16. We do not knowingly collect data from
+            minors. If you believe a child has provided us with personal data, contact us
+            immediately at{" "}
+            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>.
+          </p>
+        </Section>
 
-We collect and use your personal data for the sole purpose of order processing. This includes processing your orders, sending order confirmations, providing customer support, and keeping you updated about the status of your orders.
+        <Section title="10. Changes to this policy">
+          <p>
+            We may update this Privacy Policy from time to time. We will notify you of significant
+            changes by email and by updating the date at the top of this page. Continued use of
+            the Service after the update constitutes acceptance.
+          </p>
+        </Section>
 
-3. Data Sharing
-
-We do not share your personal data with any third parties except as required for order processing (e.g., sharing your information with payment processors). We do not sell, trade, or rent your personal information to others.
-
-4. Children's Privacy
-
-ShipFast is not intended for children under the age of 13. We do not knowingly collect personal information from children. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us at the email address provided below.
-
-5. Updates to the Privacy Policy
-
-We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. Any updates will be posted on this page, and we may notify you via email about significant changes.
-
-6. Contact Information
-
-If you have any questions, concerns, or requests related to this Privacy Policy, you can contact us at:
-
-Email: marc@shipfa.st
-
-For all other inquiries, please visit our Contact Us page on the Website.
-
-By using ShipFast, you consent to the terms of this Privacy Policy.`}
-        </pre>
+        <div className="border-t border-border pt-8 text-sm text-ink-3">
+          <p>
+            Questions? Contact us at{" "}
+            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>
+          </p>
+        </div>
       </div>
     </main>
   );
-};
-
-export default PrivacyPolicy;
+}

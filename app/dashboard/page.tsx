@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ComponentRow from '@/components/ComponentRow';
 import supabaseAdmin from '@/libs/supabaseAdmin';
+import UpgradeBanner from '@/components/UpgradeBanner';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,13 @@ export default async function DashboardPage() {
             Upload component
           </Link>
         </div>
+
+        {/* Upgrade banner — free users at 8+ components */}
+        {profile?.plan === 'free' && (profile?.component_count ?? 0) >= 8 && (
+          <div className="mb-8">
+            <UpgradeBanner count={profile.component_count} />
+          </div>
+        )}
 
         {/* Plan progress bar — free users only */}
         {isFree && (
