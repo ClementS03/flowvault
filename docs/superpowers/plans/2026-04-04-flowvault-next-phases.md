@@ -125,6 +125,40 @@ Les filtres catégorie + tag suffisent pour le MVP. À faire si les utilisateurs
 
 ---
 
+## Phase 6 — HTML / React / Next.js → Webflow *(R&D, futur lointain)*
+
+**Idée :** Permettre à l'utilisateur de coller du HTML+CSS+JS (ou un composant React/Next.js) et obtenir un composant Webflow (XscpData JSON) prêt à coller dans le Designer.
+
+**Inspiration :** [moden.io](https://moden.io) fait cette conversion côté serveur.
+
+**Deux entrées envisagées :**
+
+### Option A — HTML/CSS/JS → Webflow
+- Interface `/convert` avec 3 onglets : HTML · CSS · JavaScript
+- L'utilisateur colle son code, un moteur de conversion génère le JSON XscpData
+- Résultat copiable directement dans le Webflow Designer
+
+### Option B — React / Next.js → Webflow
+- L'utilisateur colle un composant React (JSX + styles)
+- Le moteur parse le JSX, mappe les éléments aux types Webflow (`div`, `text`, `image`, `link`…)
+- Génère les styles sous forme de classes Webflow
+- Construit l'arbre XscpData
+
+**Complexité estimée :**
+- Mapping DOM → XscpData : élevée (pas d'API officielle Webflow)
+- Gestion des styles CSS → classes Webflow : très élevée
+- React JSX → DOM statique : faisable (babel transform)
+- Interactions Webflow (animations, tabs) : hors scope initial
+
+**Références :**
+- moden.io — convertisseur HTML→Webflow, approche serveur
+- Format XscpData : documenté partiellement dans `libs/copyToWebflow.ts`
+- Pas d'API officielle Webflow pour la conversion — reverse engineering nécessaire
+
+**Statut :** Idée documentée. Ne pas implémenter avant d'avoir validé la demande utilisateur et fait une R&D sérieuse sur le format XscpData. À brainstormer avec `/brainstorming` quand le moment vient.
+
+---
+
 ## Dettes techniques — TOUTES RÉSOLUES ✅
 
 - DB complète, browse fonctionne en prod ✅
