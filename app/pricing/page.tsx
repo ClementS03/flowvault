@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getSEOTags } from '@/libs/seo';
 import config from '@/config';
 import ButtonCheckout from '@/components/ButtonCheckout';
+import FaqAccordion from '@/components/FaqAccordion';
 
 export const metadata = getSEOTags({
   title: `Pricing | ${config.appName}`,
@@ -96,19 +97,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="max-w-xl mx-auto mt-16 space-y-5">
-          <h2 className="font-heading font-semibold text-xl text-ink text-center mb-8">Common questions</h2>
-          {[
-            { q: 'Can I cancel at any time?', a: 'Yes. Cancel from your billing portal and you keep Pro until the end of the billing period.' },
-            { q: 'What happens to my components if I downgrade?', a: "All your existing components stay. You just can't upload new ones beyond the 10-component free limit." },
-            { q: 'Is there a free trial?', a: 'The free plan is your trial — no time limit. Upgrade when you need more.' },
-          ].map(({ q, a }) => (
-            <div key={q} className="border-b border-border pb-5">
-              <p className="font-medium text-ink mb-1.5">{q}</p>
-              <p className="text-sm text-ink-2 leading-relaxed">{a}</p>
-            </div>
-          ))}
-        </div>
+        <FaqAccordion />
       </div>
     </main>
   );

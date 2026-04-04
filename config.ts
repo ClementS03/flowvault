@@ -2,8 +2,7 @@ import { ConfigProps } from "./types/config";
 
 const config = {
   appName: "FlowVault",
-  appDescription:
-    "Store, share and copy Webflow components in one click.",
+  appDescription: "Store, share and copy Webflow components in one click.",
   domainName: "flowvault.io",
   crisp: {
     id: "",
@@ -14,12 +13,13 @@ const config = {
       {
         priceId:
           process.env.NODE_ENV === "development"
-            ? "price_dev_pro"
-            : "price_prod_pro",
+            ? "price_1TITMnIEMd7KisSxfevrBgcs"
+            : "price_1TIQydIEMd7KisSxLz3c1CnH",
         isFeatured: true,
         name: "Pro",
         description: "Unlimited components, unlimited sharing",
         price: 9,
+        priceAnchor: 19,
         features: [
           { name: "Unlimited components" },
           { name: "Public & private sharing" },
