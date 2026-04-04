@@ -64,7 +64,7 @@ export default function PricingPage() {
               </li>
             </ul>
             <Link href="/dashboard" className="w-full flex items-center justify-center rounded-lg border border-border bg-surface hover:bg-border text-ink font-medium px-4 py-3 text-sm transition-colors">
-              Get started free
+              Stay on free
             </Link>
           </div>
 
