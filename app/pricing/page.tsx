@@ -71,7 +71,7 @@ export default function PricingPage() {
           {/* Pro */}
           <div className="rounded-2xl border-2 border-accent bg-bg p-8 flex flex-col relative overflow-hidden">
             <div className="absolute top-5 right-5">
-              <span className="rounded-full bg-accent-bg text-accent text-xs font-semibold px-3 py-1">Most popular</span>
+              <span className="rounded-full bg-accent-bg text-accent text-xs font-semibold px-3 py-1">Unlimited</span>
             </div>
             <div className="mb-6">
               <h2 className="font-heading font-bold text-xl text-ink mb-1">Pro</h2>
