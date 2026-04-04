@@ -493,3 +493,104 @@ Une fois le setup fait, créer dans l'ordre :
 | `components/Header.tsx` | Nav FlowVault (Browse, Upload, Dashboard) |
 | `components/Footer.tsx` | Branding FlowVault |
 | `libs/supabase.ts` | Vérifier config, ne pas modifier la logique |
+
+---
+
+## Bugs rencontrés et solutions — Référence
+
+### B1 — `'React' is not defined` au build
+**Symptôme :** `Error: 'React' is not defined. no-undef` sur un fichier `.tsx`
+**Cause :** Utilisation de `React.ReactNode`, `React.FormEvent`, etc. sans import React
+**Fix :** Importer le type directement : `import type { ReactNode, FormEvent } from 'react'`
+**Fichiers touchés :** `app/tos/page.tsx`, `app/legal/page.tsx`, `app/privacy-policy/page.tsx`, `app/onboarding/page.tsx`
+
+### B2 — Favicon ShipFast qui persiste sur Vercel
+**Symptôme :** La favicon FlowVault n'apparaît pas, c'est encore celle de ShipFast
+**Cause :** `app/favicon.ico` (ShipFast) prenait priorité sur tout — Next.js sert ce fichier en premier
+**Fix :** `git rm app/favicon.ico` + créer `public/icon.svg` + référencer dans `layout.tsx` metadata
+**Note :** Les navigateurs cachent agressivement les favicons → tester en incognito après déploiement
+
+### B3 — Icons TSX cassées sur Windows (path avec espaces)
+**Symptôme :** `TypeError: Invalid URL` sur `/icon`, `/apple-icon`, `/opengraph-image` en dev local
+**Cause :** `@vercel/og` (ImageResponse) utilise `fileURLToPath` qui génère une URL malformée sur Windows quand le chemin contient des espaces (`Projets web`)
+**Fix :** Supprimer `app/icon.tsx` et `app/apple-icon.tsx`, utiliser un SVG statique dans `public/`
+**Note :** Le bug n'apparaît PAS sur Vercel — uniquement en dev Windows avec chemin à espaces
+
+### B4 — `Module not found: Can't resolve '@/app/icon.png'`
+**Symptôme :** Build Vercel échoue avec cette erreur dans `HeaderBlog.tsx`
+**Cause :** `app/icon.png` (ShipFast) supprimé via `git rm` mais `HeaderBlog.tsx` l'importait encore
+**Fix :** Remplacer `import logo from "@/app/icon.png"` par `src="/icon.svg"` dans HeaderBlog
+
+### B5 — GitHub Push Protection bloque le push
+**Symptôme :** `remote: GITHUB PUSH PROTECTION — Push cannot contain secrets`
+**Cause :** Le fichier de plan contenait `STRIPE_SECRET_KEY=sk_test_xxxxxxx` — le pattern `sk_test_` déclenche le scanner même avec une fausse valeur
+**Fix :** Réécrire l'historique git avec `git filter-branch --tree-filter` pour remplacer le pattern dans tous les commits concernés, puis `git push --force-with-lease`
+
+### B6 — Magic link redirige vers localhost en production
+**Symptôme :** Le lien dans l'email magic link pointe vers `http://localhost:3001`
+**Cause :** Supabase Dashboard → Authentication → URL Configuration → Site URL était encore sur localhost
+**Fix :** Supabase Dashboard → Authentication → URL Configuration :
+- Site URL : `https://flowvault-ten.vercel.app`
+- Redirect URLs : ajouter `https://flowvault-ten.vercel.app/**` et `http://localhost:3000/**`
+
+### B7 — Paiement Stripe → plan reste `free`
+**Symptôme :** Paiement réussi dans Stripe mais `profiles.plan` reste `free`
+**Cause :** Webhook Stripe non configuré en mode test, ou `STRIPE_WEBHOOK_SECRET` incorrect dans Vercel
+**Fix :** Stripe Dashboard (mode TEST) → Developers → Webhooks → créer endpoint `https://flowvault-ten.vercel.app/api/stripe/webhook` → copier `whsec_xxx` → Vercel env vars → Redeploy
+
+### B8 — 404 sur "Upgrade to Pro"
+**Symptôme :** Clic sur le bouton Upgrade → page 404
+**Cause :** `NODE_ENV === "production"` sur Vercel → prend le price ID live, mais les clés Stripe sont en test → Stripe rejette
+**Fix :** Remplacer la logique `NODE_ENV` par une env var `NEXT_PUBLIC_STRIPE_PRICE_ID` dans Vercel pointant vers le price ID test
+
+### B9 — `bg-[radial-gradient(...theme(colors.base-300)...)]` warning Tailwind
+**Symptôme :** Warning au build sur cette classe
+**Cause :** Reste de ShipFast dans une page blog non utilisée — référence des couleurs DaisyUI (`base-300`) qui n'existent plus
+**Fix :** Ignorable pour le moment — warning uniquement, pas d'erreur. Nettoyer le blog ShipFast quand nécessaire.
+
+### B10 — Resend.dev domain restriction
+**Symptôme :** Email magic link non reçu, log Resend : "Testing domain restriction: can only send to your own email address"
+**Cause :** `resend.dev` (domaine de test Resend) ne peut envoyer qu'à l'email du compte Resend
+**Fix :** Utiliser `resend.dev` uniquement pour tester avec ton propre email. Pour envoyer à tous → vérifier le domaine dans Resend + changer le sender email en `hello@[ton-domaine]`
+
+---
+
+## Configuration Stripe — Référence rapide
+
+```
+Price ID test  : price_1TITMnIEMd7KisSxfevrBgcs
+Price ID live  : price_1TIQydIEMd7KisSxLz3c1CnH
+
+Vercel env vars nécessaires :
+  STRIPE_SECRET_KEY                   sk_test_xxx (ou sk_live_xxx)
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY  pk_test_xxx (ou pk_live_xxx)
+  STRIPE_WEBHOOK_SECRET               whsec_xxx du webhook Vercel (mode test OU live)
+  NEXT_PUBLIC_STRIPE_PRICE_ID         price_xxx (test ou live selon les clés utilisées)
+
+Webhook endpoint : https://flowvault-ten.vercel.app/api/stripe/webhook
+Events : checkout.session.completed, customer.subscription.deleted, invoice.payment_failed
+
+⚠️  Le whsec_xxx du CLI local (stripe listen) ≠ whsec_xxx du webhook Vercel
+⚠️  Price ID live + clés test = erreur Stripe "No such price"
+⚠️  Après chaque modif d'env var Vercel → Redeploy obligatoire
+```
+
+## Configuration Supabase — Référence rapide
+
+```
+Authentication → URL Configuration :
+  Site URL     : https://flowvault-ten.vercel.app
+  Redirect URLs: https://flowvault-ten.vercel.app/**
+                 http://localhost:3000/**
+                 http://localhost:3001/**
+
+Authentication → SMTP (Resend) :
+  Host     : smtp.resend.com
+  Port     : 465
+  Username : resend
+  Password : re_xxx (clé API Resend)
+  Sender   : hello@[domaine vérifié] ou onboarding@resend.dev (test seulement)
+
+Email dans auth.users (pas dans profiles) — accès via session.user.email
+Google OAuth + Magic Link même email → même user (automatic account linking Supabase)
+```

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getSEOTags } from '@/libs/seo';
 import config from '@/config';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import ButtonCheckout from '@/components/ButtonCheckout';
 import FaqAccordion from '@/components/FaqAccordion';
 
@@ -29,8 +31,9 @@ export default function PricingPage() {
   const plan = config.stripe.plans[0];
 
   return (
-    <main className="min-h-screen bg-bg">
-      <div className="mx-auto px-[var(--px-site)] py-20" style={{ maxWidth: 'var(--max-width)' }}>
+    <main className="min-h-screen bg-bg flex flex-col">
+      <Header />
+      <div className="flex-1 mx-auto w-full px-[var(--px-site)] py-20" style={{ maxWidth: 'var(--max-width)' }}>
         <div className="text-center mb-14">
           <h1 className="font-heading font-bold text-4xl text-ink mb-4">Simple, honest pricing</h1>
           <p className="text-ink-2 text-lg max-w-md mx-auto">Free forever for casual makers. Pro for those who ship every day.</p>
@@ -99,6 +102,7 @@ export default function PricingPage() {
 
         <FaqAccordion />
       </div>
+      <Footer />
     </main>
   );
 }
