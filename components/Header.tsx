@@ -9,6 +9,7 @@ import config from "@/config";
 const navLinks = [
   { href: "/browse", label: "Browse" },
   { href: "/upload", label: "Upload" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 const Header = () => {
