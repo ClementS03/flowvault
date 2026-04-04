@@ -26,7 +26,10 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata = getSEOTags();
+export const metadata = {
+  ...getSEOTags(),
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
