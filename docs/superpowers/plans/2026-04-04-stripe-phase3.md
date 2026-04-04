@@ -65,9 +65,9 @@ In Supabase → Table Editor → `profiles` table. Confirm `customer_id` column 
 Add these lines (use Stripe **test mode** keys for local dev):
 
 ```
-STRIPE_SECRET_KEY=[your Stripe test secret key]
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_SECRET_KEY=[your Stripe test secret key — sk_test_...]
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=[your Stripe test publishable key — pk_test_...]
+STRIPE_WEBHOOK_SECRET=[from Stripe CLI output — whsec_...]
 ```
 
 The `STRIPE_WEBHOOK_SECRET` for local dev comes from the Stripe CLI (see Task 3, Step 1).
