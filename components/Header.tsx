@@ -3,22 +3,38 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import ButtonSignin from "./ButtonSignin";
 import config from "@/config";
 
 const navLinks = [
   { href: "/browse", label: "Browse" },
   { href: "/upload", label: "Upload" },
-  { href: "/pricing", label: "Pricing" },
 ];
 
 const Header = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [plan, setPlan] = useState<"free" | "pro" | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const supabase = createClientComponentClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      setIsLoggedIn(true);
+      const { data } = await supabase
+        .from("profiles")
+        .select("plan")
+        .eq("id", session.user.id)
+        .single();
+      setPlan(data?.plan ?? "free");
+    });
+  }, []);
 
   return (
     <header
@@ -51,10 +67,24 @@ const Header = () => {
               {link.label}
             </Link>
           ))}
+          {/* Pricing — only for non-logged-in users */}
+          {!isLoggedIn && (
+            <Link href="/pricing" className="text-sm font-medium text-ink-2 hover:text-ink transition-colors">
+              Pricing
+            </Link>
+          )}
         </div>
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
+          {isLoggedIn && plan === "free" && (
+            <Link
+              href="/pricing"
+              className="text-sm font-medium text-accent hover:text-accent-h transition-colors"
+            >
+              Upgrade ↑
+            </Link>
+          )}
           <Link
             href="/dashboard"
             className="text-sm font-medium text-ink-2 hover:text-ink transition-colors"
@@ -107,6 +137,16 @@ const Header = () => {
                   {link.label}
                 </Link>
               ))}
+              {!isLoggedIn && (
+                <Link href="/pricing" className="text-base font-medium text-ink-2 hover:text-ink" onClick={() => setIsOpen(false)}>
+                  Pricing
+                </Link>
+              )}
+              {isLoggedIn && plan === "free" && (
+                <Link href="/pricing" className="text-base font-medium text-accent hover:text-accent-h" onClick={() => setIsOpen(false)}>
+                  Upgrade ↑
+                </Link>
+              )}
               <Link href="/dashboard" className="text-base font-medium text-ink-2 hover:text-ink" onClick={() => setIsOpen(false)}>
                 Dashboard
               </Link>
