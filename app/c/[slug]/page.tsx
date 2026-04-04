@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { headers, cookies } from 'next/headers';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -113,7 +114,7 @@ export default async function ComponentPage({ params }: Props) {
             {displayName && profile?.username && (
               <div className="mt-4 flex items-center gap-2">
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt={displayName} className="w-6 h-6 rounded-full object-cover" />
+                  <Image src={profile.avatar_url} alt={displayName} width={24} height={24} className="w-6 h-6 rounded-full object-cover" />
                 ) : (
                   <span className="w-6 h-6 rounded-full bg-accent-bg flex items-center justify-center text-accent text-xs font-semibold">
                     {displayName[0].toUpperCase()}
@@ -131,7 +132,7 @@ export default async function ComponentPage({ params }: Props) {
           {/* Preview image */}
           {component.image_url && (
             <div className="mb-8 rounded-xl overflow-hidden border border-border">
-              <img src={component.image_url} alt={component.name} className="w-full object-cover" />
+              <Image src={component.image_url} alt={component.name} width={800} height={450} className="w-full object-cover" />
             </div>
           )}
 
@@ -180,8 +181,8 @@ export default async function ComponentPage({ params }: Props) {
                     className="group rounded-lg border border-border bg-surface hover:border-accent/40 hover:shadow-sm transition-all overflow-hidden flex flex-col"
                   >
                     {c.image_url ? (
-                      <div className="w-full h-24 overflow-hidden border-b border-border">
-                        <img src={c.image_url} alt={c.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
+                      <div className="relative w-full h-24 overflow-hidden border-b border-border">
+                        <Image src={c.image_url} alt={c.name} fill className="object-cover group-hover:scale-[1.03] transition-transform duration-300" />
                       </div>
                     ) : (
                       <div className="w-full h-24 bg-accent-bg border-b border-border flex items-center justify-center">

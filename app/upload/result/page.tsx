@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 import ResultSignInPanel from '@/components/ResultSignInPanel';
@@ -73,7 +74,7 @@ export default async function ResultPage({ searchParams }: Props) {
               {/* Preview image */}
               {component.image_url && (
                 <div className="w-full rounded-lg overflow-hidden border border-border">
-                  <img src={component.image_url} alt={component.name} className="w-full object-cover" />
+                  <Image src={component.image_url} alt={component.name} width={800} height={450} className="w-full object-cover" />
                 </div>
               )}
 

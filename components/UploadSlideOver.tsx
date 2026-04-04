@@ -271,6 +271,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
                 onClick={() => imageInputRef.current?.click()}
               >
                 {imagePreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imagePreview}
                     alt="Preview"

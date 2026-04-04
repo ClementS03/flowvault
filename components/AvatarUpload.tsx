@@ -13,6 +13,7 @@ interface AvatarUploadProps {
   userId: string;
   avatarUrl: string | null;
   displayName: string;
+  // eslint-disable-next-line no-unused-vars
   onAvatarChange: (url: string | null) => void;
 }
 

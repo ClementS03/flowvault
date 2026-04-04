@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
@@ -7,7 +8,7 @@ export const metadata = getSEOTags({
   canonicalUrlRelative: "/privacy-policy",
 });
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mb-10">
     <h2 className="font-heading font-semibold text-xl text-ink mb-4">{title}</h2>
     <div className="space-y-3 text-sm text-ink-2 leading-relaxed">{children}</div>
@@ -43,7 +44,7 @@ export default function PrivacyPolicy() {
           </p>
           <p>
             As data controller, Clément Seguin is responsible for the personal data collected
-            through <strong>flowvault.io</strong> (the "Service").
+            through <strong>flowvault.io</strong> (the &quot;Service&quot;).
           </p>
         </Section>
 

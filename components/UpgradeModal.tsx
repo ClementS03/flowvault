@@ -26,7 +26,7 @@ export default function UpgradeModal({ onClose }: Props) {
           </svg>
         </div>
         <h2 id="upgrade-title" className="font-heading font-bold text-xl text-ink mb-2">
-          You've reached the free limit
+          You&apos;ve reached the free limit
         </h2>
         <p className="text-sm text-ink-2 leading-relaxed mb-6">
           Free accounts can store up to <strong>10 components</strong>. Upgrade to Pro for unlimited storage and sharing.

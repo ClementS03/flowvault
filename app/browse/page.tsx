@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -107,11 +108,12 @@ export default async function BrowsePage({ searchParams }: Props) {
                   {/* Preview image */}
                   <Link href={`/c/${c.slug}`} className="block">
                     {c.image_url ? (
-                      <div className="w-full h-44 overflow-hidden bg-bg border-b border-border">
-                        <img
+                      <div className="relative w-full h-44 overflow-hidden bg-bg border-b border-border">
+                        <Image
                           src={c.image_url}
                           alt={c.name}
-                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          fill
+                          className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
                         />
                       </div>
                     ) : (
@@ -160,9 +162,11 @@ export default async function BrowsePage({ searchParams }: Props) {
                           className="flex items-center gap-1.5 min-w-0 group/author"
                         >
                           {profile?.avatar_url ? (
-                            <img
+                            <Image
                               src={profile.avatar_url}
                               alt={displayName}
+                              width={20}
+                              height={20}
                               className="w-5 h-5 rounded-full object-cover shrink-0"
                             />
                           ) : (
