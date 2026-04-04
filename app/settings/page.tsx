@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SettingsForm from '@/components/SettingsForm';
 import supabaseAdmin from '@/libs/supabaseAdmin';
+import DeleteAccountButton from '@/components/DeleteAccountButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,15 @@ export default async function SettingsPage() {
           avatarUrl={avatarUrl}
           initialIsPrivate={profile?.is_private ?? false}
         />
+
+        {/* Danger zone */}
+        <div className="mt-10 rounded-xl border border-red-200 bg-red-50 p-6">
+          <h2 className="font-heading font-semibold text-red-900 mb-1">Danger zone</h2>
+          <p className="text-sm text-red-700 mb-4">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          <DeleteAccountButton />
+        </div>
       </main>
       <Footer />
     </div>
