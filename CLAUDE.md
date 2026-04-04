@@ -3,6 +3,34 @@
 
 ---
 
+## Règles de code — NE JAMAIS ENFREINDRE
+
+### React / Next.js 14 — imports de types
+Next.js 14 utilise le nouveau JSX transform : **`React` n'est pas importé automatiquement**.
+Toute utilisation de `React.Xxx` sans import explicite provoque `'React' is not defined` au build.
+
+**Règle absolue : ne jamais écrire `React.Xxx` dans un fichier `.tsx`.**
+Toujours importer le type directement depuis `'react'` :
+
+```ts
+// ❌ INTERDIT — casse le build
+children: React.ReactNode
+const handleSubmit = (e: React.FormEvent) => {}
+
+// ✅ CORRECT
+import type { ReactNode, FormEvent } from 'react';
+children: ReactNode
+const handleSubmit = (e: FormEvent) => {}
+```
+
+Cela s'applique à tous les types React : `ReactNode`, `FormEvent`, `MouseEvent`,
+`ChangeEvent`, `KeyboardEvent`, `CSSProperties`, `FC`, `RefObject`, etc.
+
+### URL de déploiement Vercel
+`https://flowvault-ten.vercel.app` (pas flowvault.vercel.app)
+
+---
+
 ## Ce qu'est ce projet
 
 **FlowVault** est une marketplace de partage de composants Webflow.
