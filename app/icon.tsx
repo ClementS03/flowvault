@@ -15,14 +15,30 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "sans-serif",
-          fontWeight: 700,
-          fontSize: 14,
-          color: "#ffffff",
-          letterSpacing: "-0.5px",
         }}
       >
-        FV
+        {/* Vault door */}
+        <div
+          style={{
+            width: 18,
+            height: 18,
+            border: "2.5px solid white",
+            borderRadius: 4,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* Vault knob */}
+          <div
+            style={{
+              width: 7,
+              height: 7,
+              border: "2px solid white",
+              borderRadius: "50%",
+            }}
+          />
+        </div>
       </div>
     ),
     { ...size }
