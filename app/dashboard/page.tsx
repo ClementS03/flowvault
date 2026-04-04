@@ -28,7 +28,7 @@ export default async function DashboardPage() {
 
     supabaseAdmin
       .from('profiles')
-      .select('plan, component_count')
+      .select('plan, component_count, username')
       .eq('id', userId)
       .single(),
   ]);
@@ -68,6 +68,26 @@ export default async function DashboardPage() {
             Upload component
           </Link>
         </div>
+
+        {/* Username banner — no username set */}
+        {!profile?.username && (
+          <div className="mb-8 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-amber-600 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+              <p className="text-sm font-medium text-amber-900">
+                Your profile is incomplete — set a username to be discoverable on FlowVault.
+              </p>
+            </div>
+            <Link
+              href="/onboarding"
+              className="shrink-0 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2 text-sm transition-colors"
+            >
+              Set username →
+            </Link>
+          </div>
+        )}
 
         {/* Upgrade banner — free users at 8+ components */}
         {profile?.plan === 'free' && (profile?.component_count ?? 0) >= 8 && (
