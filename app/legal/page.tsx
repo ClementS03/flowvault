@@ -155,8 +155,8 @@ export default function LegalPage() {
             cookie essentiel.
           </p>
           <p>
-            L&apos;outil d&apos;analyse Plausible Analytics est utilisé sans dépôt de cookies et
-            sans collecte de données personnelles.
+            L&apos;outil d&apos;analyse Vercel Analytics est utilisé sans dépôt de cookies et
+            sans collecte de données personnelles identifiantes.
           </p>
         </Section>
 

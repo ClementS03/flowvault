@@ -87,7 +87,7 @@ export default function PrivacyPolicy() {
             <li>Store, display and share your components (contractual basis)</li>
             <li>Process your Pro subscription payment via Stripe (contractual basis)</li>
             <li>Send transactional emails (magic link, billing receipts) via Resend (contractual basis)</li>
-            <li>Measure aggregate, anonymous site traffic via Plausible (legitimate interest — Art. 6.1.f GDPR)</li>
+            <li>Measure aggregate, anonymous site traffic via Vercel Analytics (legitimate interest — Art. 6.1.f GDPR)</li>
             <li>Prevent fraud and abuse (legitimate interest)</li>
           </ul>
           <p>We do not sell your data. We do not use your data for advertising.</p>
@@ -104,7 +104,7 @@ export default function PrivacyPolicy() {
             </li>
             <li>
               <strong>Analytics</strong> — We use{" "}
-              <a href="https://plausible.io" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">Plausible</a>,
+              <a href="https://vercel.com/analytics" className="text-accent hover:underline" target="_blank" rel="noopener noreferrer">Vercel Analytics</a>,
               a privacy-friendly analytics tool that collects no personal data and sets no cookies.
               No cookie banner is required.
             </li>
@@ -132,7 +132,7 @@ export default function PrivacyPolicy() {
                   ["Supabase Inc.", "Database, Auth & Storage", "USA/EU (SCC)"],
                   ["Stripe Inc.", "Payment processing", "USA (SCC, PCI-DSS)"],
                   ["Resend Inc.", "Transactional email", "USA (SCC)"],
-                  ["Plausible Analytics", "Anonymous traffic analytics", "EU (Lithuania) ✓"],
+                  ["Vercel Analytics", "Anonymous traffic analytics", "USA (SCC)"],
                 ].map(([provider, purpose, country]) => (
                   <tr key={provider} className="border-t border-border">
                     <td className="px-3 py-2 text-ink">{provider}</td>
@@ -152,7 +152,7 @@ export default function PrivacyPolicy() {
             <li>Copy logs: until account deletion</li>
             <li>Stripe customer ID: deleted from our database when you delete your account (Stripe retains billing records as required by law)</li>
             <li>Vercel access logs: 30 days</li>
-            <li>Plausible data: aggregate only, no personal data retained</li>
+            <li>Vercel Analytics data: aggregate only, no personal data retained</li>
           </ul>
         </Section>
 

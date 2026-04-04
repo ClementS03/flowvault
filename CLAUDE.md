@@ -555,21 +555,54 @@ Une fois le setup fait, créer dans l'ordre :
 
 ---
 
+## Analytics
+
+**Outil utilisé : Vercel Analytics** (remplace Plausible ShipFast)
+- Package : `@vercel/analytics` — `<Analytics />` dans `app/layout.tsx`
+- Cookieless, RGPD-compliant, pas de bandeau cookies nécessaire
+- Gratuit sur Vercel Hobby (2 500 events/mois)
+- **Activer dans Vercel Dashboard** → ton projet → Analytics → Enable
+- Pages légales mises à jour : `app/legal/page.tsx` + `app/privacy-policy/page.tsx`
+- `next-plausible` désinstallé
+
+**Bandeau cookies** : NON nécessaire — seul cookie = session Supabase (essentiel, pas de consentement requis)
+
+---
+
+## Passer en production (Stripe live)
+
+**Vercel env vars à changer :**
+```
+STRIPE_SECRET_KEY                  → sk_live_xxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY → pk_live_xxx
+NEXT_PUBLIC_STRIPE_PRICE_ID        → price_1TIQydIEMd7KisSxLz3c1CnH
+STRIPE_WEBHOOK_SECRET              → whsec_xxx du webhook LIVE (voir ci-dessous)
+```
+
+**Stripe Dashboard → Live mode → Developers → Webhooks :**
+- Créer nouveau endpoint : `https://flowvault-ten.vercel.app/api/stripe/webhook`
+- Events : `checkout.session.completed`, `customer.subscription.deleted`, `invoice.payment_failed`
+- Copier le signing secret → `STRIPE_WEBHOOK_SECRET` dans Vercel
+
+**Resend (pour magic links vers tous les users, pas seulement ton email) :**
+- Vérifier un domaine dans Resend Dashboard
+- Changer le sender SMTP de `onboarding@resend.dev` → `hello@[ton-domaine]`
+
+**Après chaque modif Vercel env vars → Redeploy obligatoire**
+
+---
+
 ## Configuration Stripe — Référence rapide
 
 ```
 Price ID test  : price_1TITMnIEMd7KisSxfevrBgcs
 Price ID live  : price_1TIQydIEMd7KisSxLz3c1CnH
 
-Vercel env vars nécessaires :
-  STRIPE_SECRET_KEY                   sk_test_xxx (ou sk_live_xxx)
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY  pk_test_xxx (ou pk_live_xxx)
-  STRIPE_WEBHOOK_SECRET               whsec_xxx du webhook Vercel (mode test OU live)
-  NEXT_PUBLIC_STRIPE_PRICE_ID         price_xxx (test ou live selon les clés utilisées)
-
 Webhook endpoint : https://flowvault-ten.vercel.app/api/stripe/webhook
 Events : checkout.session.completed, customer.subscription.deleted, invoice.payment_failed
 
+⚠️  307 webhook = URL pointe vers une page Next.js (pas l'API route) → vérifier l'URL dans Stripe
+⚠️  400 "Invalid signature" = STRIPE_WEBHOOK_SECRET dans Vercel ne correspond pas au signing secret du webhook
 ⚠️  Le whsec_xxx du CLI local (stripe listen) ≠ whsec_xxx du webhook Vercel
 ⚠️  Price ID live + clés test = erreur Stripe "No such price"
 ⚠️  Après chaque modif d'env var Vercel → Redeploy obligatoire

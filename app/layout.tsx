@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Space_Grotesk, Inter } from "next/font/google";
 import { Viewport } from "next";
-import PlausibleProvider from "next-plausible";
+import { Analytics } from "@vercel/analytics/react";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
 import ClipboardBridge from "@/components/ClipboardBridge";
@@ -34,14 +34,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-      {config.domainName && (
-        <head>
-          <PlausibleProvider domain={config.domainName} />
-        </head>
-      )}
       <body>
         <ClientLayout>{children}</ClientLayout>
         <ClipboardBridge />
+        <Analytics />
       </body>
     </html>
   );
