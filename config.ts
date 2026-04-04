@@ -11,10 +11,7 @@ const config = {
   stripe: {
     plans: [
       {
-        priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_1TITMnIEMd7KisSxfevrBgcs"
-            : "price_1TIQydIEMd7KisSxLz3c1CnH",
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "price_1TITMnIEMd7KisSxfevrBgcs",
         isFeatured: true,
         name: "Pro",
         description: "Unlimited components, unlimited sharing",
