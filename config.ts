@@ -20,7 +20,6 @@ const config = {
         name: "Pro",
         description: "Unlimited components, unlimited sharing",
         price: 9,
-        priceAnchor: 19,
         features: [
           { name: "Unlimited components" },
           { name: "Public & private sharing" },
