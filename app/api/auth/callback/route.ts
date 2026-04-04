@@ -8,10 +8,13 @@ export const dynamic = 'force-dynamic';
 
 // Called after a successful login. Exchanges the code for a session,
 // claims any pending temp component (if slug param present), then redirects.
+// → /onboarding if no username set yet, otherwise /dashboard
 export async function GET(req: NextRequest) {
   const requestUrl = new URL(req.url);
   const code = requestUrl.searchParams.get('code');
   const slug = requestUrl.searchParams.get('slug');
+
+  let redirectTo = config.auth.callbackUrl;
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
@@ -21,11 +24,24 @@ export async function GET(req: NextRequest) {
       console.error('[auth/callback] exchangeCodeForSession error:', error.message);
     }
 
-    // If a temp component slug is present, claim it for this user
-    if (slug && data.session?.user?.id) {
-      await claimComponent(slug, data.session.user.id);
+    if (data.session?.user?.id) {
+      // Claim pending temp component if any
+      if (slug) {
+        await claimComponent(slug, data.session.user.id);
+      }
+
+      // Check if user has a username — if not, send to onboarding
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', data.session.user.id)
+        .single();
+
+      if (!profile?.username) {
+        redirectTo = '/onboarding';
+      }
     }
   }
 
-  return NextResponse.redirect(requestUrl.origin + config.auth.callbackUrl);
+  return NextResponse.redirect(requestUrl.origin + redirectTo);
 }

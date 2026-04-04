@@ -11,7 +11,9 @@ const config = {
   stripe: {
     plans: [
       {
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "price_1TITMnIEMd7KisSxfevrBgcs",
+        priceId:
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID ||
+          "price_1TITMnIEMd7KisSxfevrBgcs",
         isFeatured: true,
         name: "Pro",
         description: "Unlimited components, unlimited sharing",
@@ -24,13 +26,6 @@ const config = {
         ],
       },
     ],
-  },
-  mailgun: {
-    subdomain: "mg",
-    fromNoReply: `FlowVault <noreply@mg.flowvault.io>`,
-    fromAdmin: `FlowVault <hello@flowvault.io>`,
-    supportEmail: "hello@flowvault.io",
-    forwardRepliesTo: "hello@flowvault.io",
   },
   colors: {
     main: "#6366f1",
