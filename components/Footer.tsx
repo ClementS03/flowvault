@@ -31,6 +31,7 @@ const Footer = () => {
             <span className="text-xs font-semibold uppercase tracking-widest text-ink-3">Legal</span>
             <Link href="/tos" className="text-sm text-ink-2 hover:text-ink transition-colors">Terms</Link>
             <Link href="/privacy-policy" className="text-sm text-ink-2 hover:text-ink transition-colors">Privacy</Link>
+            <Link href="/legal" className="text-sm text-ink-2 hover:text-ink transition-colors">Mentions légales</Link>
           </div>
         </div>
       </div>
