@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import { updateComponent } from '@/app/actions/updateComponent';
 
 const CATEGORIES = [
-  { value: '', label: 'No category' },
   { value: 'hero', label: 'Hero' },
   { value: 'navbar', label: 'Navbar' },
   { value: 'pricing', label: 'Pricing' },
@@ -90,6 +89,10 @@ export default function EditComponentModal({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!category) {
+      toast.error('Please select a category');
+      return;
+    }
     setIsSaving(true);
 
     const formData = new FormData();
@@ -111,7 +114,11 @@ export default function EditComponentModal({
       return;
     }
 
-    toast.success('Component updated');
+    if (result.pendingReview) {
+      toast.success('Component submitted for review — it will go public once approved.');
+    } else {
+      toast.success('Component updated');
+    }
     router.refresh();
     onClose();
   }
@@ -170,12 +177,15 @@ export default function EditComponentModal({
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Category</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">
+              Category <span className="text-red-500">*</span>
+            </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full border border-border rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
             >
+              <option value="" disabled>Select a category</option>
               {CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}

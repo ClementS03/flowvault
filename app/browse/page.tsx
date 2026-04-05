@@ -1,10 +1,14 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import supabaseAdmin from '@/libs/supabaseAdmin';
 import BrowseFilters from './BrowseFilters';
+
+const GUEST_LIMIT = 10;
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +19,10 @@ interface Props {
 export default async function BrowsePage({ searchParams }: Props) {
   const category = searchParams.category?.trim() || null;
   const tag = searchParams.tag?.trim() || null;
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  const isLoggedIn = !!session;
 
   let list: {
     id: string; slug: string; name: string; description: string | null;
@@ -82,6 +90,22 @@ export default async function BrowsePage({ searchParams }: Props) {
           </p>
         )}
 
+        {/* Guest banner */}
+        {!isLoggedIn && list.length > 0 && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-accent/20 bg-accent-bg px-5 py-3.5">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-accent shrink-0">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            <p className="text-sm text-accent font-medium flex-1">
+              Showing {Math.min(GUEST_LIMIT, list.length)} of {list.length} components —{' '}
+              <Link href="/signin" className="underline underline-offset-2 hover:text-accent-h transition-colors">
+                sign up free
+              </Link>{' '}
+              to see everything and copy components.
+            </p>
+          </div>
+        )}
+
         {/* Grid */}
         {list.length === 0 ? (
           <div className="rounded-xl border border-border bg-surface p-16 text-center">
@@ -96,8 +120,9 @@ export default async function BrowsePage({ searchParams }: Props) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {list.map((c) => {
+          <div className="relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {(isLoggedIn ? list : list.slice(0, GUEST_LIMIT)).map((c) => {
               const profile = c.user_id ? profileMap[c.user_id] : null;
               const displayName = profile?.display_name || profile?.username || 'Anonymous';
               const username = profile?.username || null;
@@ -194,7 +219,20 @@ export default async function BrowsePage({ searchParams }: Props) {
               );
             })}
           </div>
-        )}
+          {!isLoggedIn && list.length > GUEST_LIMIT && (
+            <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-bg via-bg/80 to-transparent flex items-end justify-center pb-8">
+              <div className="text-center">
+                <p className="text-ink font-semibold mb-3">
+                  {list.length - GUEST_LIMIT} more component{list.length - GUEST_LIMIT !== 1 ? 's' : ''} available
+                </p>
+                <Link href="/signin" className="inline-flex items-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-6 py-3 text-sm transition-colors">
+                  Sign up free to see all
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       </main>
       <Footer />
     </div>

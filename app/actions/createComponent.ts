@@ -39,6 +39,9 @@ export async function createComponent(
   if (description && description.length > 200) throw new Error('Description must be 200 characters or less');
 
   // Validate Webflow JSON — split so inner parse error isn't swallowed by type check
+  if (jsonString.length > 5 * 1024 * 1024) {
+    throw new Error('Component JSON exceeds the 5 MB limit');
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(jsonString);

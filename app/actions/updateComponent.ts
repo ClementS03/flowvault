@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 
-export type UpdateComponentResult = { error: string } | { ok: true };
+export type UpdateComponentResult = { error: string } | { ok: true; pendingReview?: boolean };
 
 export async function updateComponent(
   id: string,
@@ -19,7 +19,7 @@ export async function updateComponent(
   // 2. Ownership + fetch current row (need slug + image_url for revalidate + cleanup)
   const { data: component } = await supabaseAdmin
     .from('components')
-    .select('id, user_id, slug, image_url')
+    .select('id, user_id, slug, image_url, moderation_status')
     .eq('id', id)
     .single();
 
@@ -96,13 +96,21 @@ export async function updateComponent(
   }
 
   // 6. Build update payload — only include image_url if it changed
+  // If the component was previously rejected and the user is trying to re-publish,
+  // set moderation_status to 'pending_review' instead of making it directly public.
+  const wasRejected = component.moderation_status === 'rejected';
+  const actualIsPublic = wasRejected && isPublic ? false : isPublic;
+  const newModerationStatus = wasRejected && isPublic ? 'pending_review' : null;
+
   const updatePayload: Record<string, unknown> = {
     name,
     description,
     category,
     tags,
-    is_public: isPublic,
+    is_public: actualIsPublic,
     updated_at: new Date().toISOString(),
+    ...(newModerationStatus !== null ? { moderation_status: newModerationStatus } : {}),
+    ...(newModerationStatus === null && !wasRejected ? { moderation_status: null } : {}),
   };
   if (imageUrl !== undefined) {
     updatePayload.image_url = imageUrl;
@@ -122,5 +130,5 @@ export async function updateComponent(
   revalidatePath(`/c/${component.slug}`);
   revalidatePath('/browse');
 
-  return { ok: true };
+  return { ok: true, pendingReview: newModerationStatus === 'pending_review' };
 }

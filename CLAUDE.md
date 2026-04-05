@@ -461,6 +461,8 @@ STRIPE_SECRET_KEY=           # peut attendre Phase 3
 STRIPE_WEBHOOK_SECRET=       # peut attendre Phase 3
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=  # peut attendre Phase 3
 RESEND_API_KEY=
+EMAIL_FROM=FlowVault <contact@clement-seguin.fr>
+ADMIN_EMAILS=clement.seguin63@gmail.com   # compte Google principal — virgule-séparé si plusieurs admins
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -552,6 +554,60 @@ Une fois le setup fait, créer dans l'ordre :
 **Symptôme :** Email magic link non reçu, log Resend : "Testing domain restriction: can only send to your own email address"
 **Cause :** `resend.dev` (domaine de test Resend) ne peut envoyer qu'à l'email du compte Resend
 **Fix :** Utiliser `resend.dev` uniquement pour tester avec ton propre email. Pour envoyer à tous → vérifier le domaine dans Resend + changer le sender email en `hello@[ton-domaine]`
+
+---
+
+## Emails transactionnels
+
+**Stack :** Nodemailer + Resend SMTP (même clé API que Supabase Auth)
+
+**Fichiers :**
+- `libs/sendEmail.ts` — transport Nodemailer, utilise `RESEND_API_KEY` + `EMAIL_FROM`
+- `libs/emailTemplates.ts` — templates HTML branded (welcome, moderation rejected, moderation approved)
+
+**Env vars à ajouter dans Vercel :**
+```
+EMAIL_FROM=FlowVault <hello@flowvault.io>   # nécessite domaine vérifié dans Resend
+```
+`RESEND_API_KEY` est déjà présent (utilisé pour Supabase SMTP).
+
+**Welcome email :** déclenché dans `app/api/auth/callback/route.ts` si le user est nouveau
+(détection : `created_at` < 30 secondes). Envoyé de façon fire-and-forget (`.catch()` loggé).
+
+---
+
+## Modération admin
+
+**Accès :** `/admin` — protégé par `middleware.js` via `ADMIN_EMAILS` env var (virgule-séparé).
+Non-admins reçoivent une 404. Page non indexée (`robots: noindex`).
+
+**Env var :** `ADMIN_EMAILS=clement.seguin63@gmail.com` — déjà présent dans Vercel.
+Même var utilisée dans `createComponent.ts` pour bypasser la limite free (pas de plafond à 10 composants pour l'admin).
+
+**DB — migration à exécuter dans Supabase SQL Editor :**
+`docs/migrations/2026-04-05-moderation.sql`
+```sql
+ALTER TABLE public.components
+  ADD COLUMN IF NOT EXISTS moderation_status text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS moderation_note text DEFAULT NULL;
+```
+
+**Comment ça marche (utilisation admin) :**
+1. Aller sur `flowvault.io/admin` (uniquement accessible si connecté avec l'email admin)
+2. La page liste tous les composants publics dans un tableau. Chaque ligne a un bouton **Unpublish**.
+3. Cliquer "Unpublish" → pop-up pour saisir la raison + checkbox "Notify author by email"
+4. Confirmer → le composant passe en privé, `moderation_status = 'rejected'`, email envoyé si coché
+5. L'auteur voit son composant comme privé dans son dashboard. S'il le remet en public (via Edit) → il ne repasse PAS directement public : il passe en `pending_review`
+6. L'admin voit les composants `pending_review` en haut de la page admin (section "Pending review" avec badge)
+7. Admin clique **Approve** → composant repasse public + email auteur "Your component is live 🎉"
+   Admin clique **Reject** → nouveau rejet avec raison + email optionnel
+
+**Aucun ID à manipuler** — tout se fait via les boutons inline dans le tableau.
+
+**Fichiers :**
+- `app/actions/moderateComponent.ts` — `rejectComponent()` + `approveComponent()`
+- `app/admin/page.tsx` — page admin (Server Component, noindex)
+- `app/admin/ModerationActions.tsx` — boutons client avec modal raison
 
 ---
 

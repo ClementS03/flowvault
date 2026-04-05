@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, type FormEvent } from 'react';
+import { useState, useEffect, useRef, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import toast from 'react-hot-toast';
@@ -43,7 +43,29 @@ export default function SettingsForm({
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);
   const [website, setWebsite] = useState(initialWebsite);
-  const usernameChanged = username !== initialUsername && initialUsername !== '';
+  const usernameChanged = username !== initialUsername;
+  const [usernameAvailability, setUsernameAvailability] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Only check if username actually changed from initial and is valid
+    if (!usernameChanged || username === initialUsername || username.length < 3) {
+      setUsernameAvailability('idle');
+      return;
+    }
+    setUsernameAvailability('checking');
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/check-username?username=${encodeURIComponent(username)}`);
+        const { available } = await res.json();
+        setUsernameAvailability(available ? 'available' : 'taken');
+      } catch {
+        setUsernameAvailability('idle');
+      }
+    }, 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [username, usernameChanged, initialUsername]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -118,22 +140,52 @@ export default function SettingsForm({
               <label htmlFor="username" className="block text-sm font-medium text-ink mb-1.5">
                 Username
               </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                value={username}
-                onChange={(e) =>
-                  setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
-                }
-                maxLength={30}
-                placeholder="your-username"
-                className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
-              />
-              <p className="text-xs text-ink-3 mt-1">
-                flowvault.io/u/{username || 'your-username'}
+              <div className={`flex items-center rounded-lg border bg-bg overflow-hidden transition-colors focus-within:ring-2 focus-within:ring-accent/20 ${
+                usernameAvailability === 'taken' ? 'border-red-400 focus-within:border-red-400' :
+                usernameAvailability === 'available' ? 'border-green-400 focus-within:border-green-400' :
+                'border-border focus-within:border-accent'
+              }`}>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) =>
+                    setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                  }
+                  maxLength={30}
+                  placeholder="your-username"
+                  className="flex-1 bg-transparent px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-3 outline-none"
+                />
+                <div className="pr-3">
+                  {usernameAvailability === 'checking' && (
+                    <svg className="w-4 h-4 animate-spin text-ink-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  )}
+                  {usernameAvailability === 'available' && (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-green-500">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  {usernameAvailability === 'taken' && (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-red-500">
+                      <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <p className={`text-xs mt-1 ${
+                usernameAvailability === 'taken' ? 'text-red-500' :
+                usernameAvailability === 'available' ? 'text-green-600' :
+                'text-ink-3'
+              }`}>
+                {usernameAvailability === 'taken' ? 'This username is already taken' :
+                 usernameAvailability === 'available' ? 'Username is available!' :
+                 `flowvault.io/u/${username || 'your-username'}`}
               </p>
-              {usernameChanged && (
+              {usernameChanged && initialUsername !== '' && (
                 <p className="text-xs text-amber-600 mt-1">
                   Changing your username will break existing links to your profile.
                 </p>
@@ -190,7 +242,7 @@ export default function SettingsForm({
               </button>
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || usernameAvailability === 'taken' || usernameAvailability === 'checking'}
                 className="inline-flex items-center gap-2 rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-2 text-sm transition-colors disabled:opacity-50"
               >
                 {isPending ? 'Saving…' : 'Save changes'}

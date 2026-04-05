@@ -9,7 +9,6 @@ import { setUsername } from '@/app/actions/setUsername';
 import UpgradeModal from '@/components/UpgradeModal';
 
 const CATEGORIES = [
-  { value: '', label: 'No category' },
   { value: 'hero', label: 'Hero' },
   { value: 'navbar', label: 'Navbar' },
   { value: 'pricing', label: 'Pricing' },
@@ -331,13 +330,16 @@ export default function UploadSlideOver({ json, onClose }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-ink mb-1.5">
-                  Category
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="category"
                   name="category"
+                  required
+                  defaultValue=""
                   className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                 >
+                  <option value="" disabled>Select a category</option>
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>
                       {c.label}

@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { claimComponent } from '@/app/actions/claimComponent';
+import { sendEmail } from '@/libs/sendEmail';
+import { welcomeEmail } from '@/libs/emailTemplates';
 import config from '@/config';
 
 export const dynamic = 'force-dynamic';
@@ -39,6 +41,17 @@ export async function GET(req: NextRequest) {
 
       if (!profile?.username) {
         redirectTo = '/onboarding';
+
+        // Detect brand-new users (created_at ≈ now, within 30s)
+        const createdAt = new Date(data.session.user.created_at).getTime();
+        const isNewUser = Date.now() - createdAt < 30_000;
+        if (isNewUser && data.session.user.email) {
+          sendEmail({
+            to: data.session.user.email,
+            subject: 'Welcome to FlowVault 👋',
+            html: welcomeEmail({}),
+          }).catch((err) => console.error('[welcome email]', err));
+        }
       }
     }
   }

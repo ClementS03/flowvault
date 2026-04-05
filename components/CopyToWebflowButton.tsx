@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { copyToWebflow } from '@/libs/copyToWebflow';
 
 interface Props {
   componentId: string;
   signedJsonUrl: string | null;
+  isLoggedIn: boolean;
 }
 
-export default function CopyToWebflowButton({ componentId, signedJsonUrl }: Props) {
+export default function CopyToWebflowButton({ componentId, signedJsonUrl, isLoggedIn }: Props) {
+  const router = useRouter();
   const [cachedJson, setCachedJson] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
 
@@ -24,6 +27,10 @@ export default function CopyToWebflowButton({ componentId, signedJsonUrl }: Prop
   }, [signedJsonUrl]);
 
   function handleCopy() {
+    if (!isLoggedIn) {
+      router.push('/signin');
+      return;
+    }
     if (!cachedJson) {
       toast.error('Component data unavailable. Please refresh the page.');
       return;
@@ -50,6 +57,21 @@ export default function CopyToWebflowButton({ componentId, signedJsonUrl }: Prop
   }
 
   const isReady = !!cachedJson;
+
+  if (!isLoggedIn) {
+    return (
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="w-full flex items-center justify-center gap-2 rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-3 text-sm transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        </svg>
+        Sign in to copy
+      </button>
+    );
+  }
 
   return (
     <button

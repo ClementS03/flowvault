@@ -109,7 +109,30 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="6. Plans and billing">
+        <Section title="6. Content moderation">
+          <p>
+            FlowVault is a marketplace for Webflow components. We reserve the right to unpublish
+            any public component that, in our sole judgment:
+          </p>
+          <ul className="list-disc list-inside space-y-2 ml-1">
+            <li>Is not a Webflow component (e.g. unrelated content, spam, placeholder files)</li>
+            <li>Contains malicious code, tracking scripts, or harmful content</li>
+            <li>Infringes intellectual property rights</li>
+            <li>Violates these Terms or applicable law</li>
+          </ul>
+          <p>
+            When a component is unpublished, it is made private — it is not deleted. The author
+            retains access to it in their library. We will endeavour to notify the author by email
+            and provide a reason. The author may edit the component and resubmit it for review.
+            Resubmitted components will not become public until explicitly approved.
+          </p>
+          <p>
+            This moderation right exists solely to maintain the quality and integrity of the public
+            marketplace. It does not apply to private components.
+          </p>
+        </Section>
+
+        <Section title="7. Plans and billing">
           <p>
             <strong>Free plan</strong> — up to 10 stored components, unlimited copies received,
             unlimited public and private sharing. No credit card required.
@@ -138,7 +161,7 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="7. Intellectual property">
+        <Section title="8. Intellectual property">
           <p>
             All elements of the Service (design, code, logo, brand name &quot;FlowVault&quot;)
             are the exclusive property of Clément Seguin and are protected by French and
@@ -152,7 +175,7 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="8. Availability and disclaimer">
+        <Section title="9. Availability and disclaimer">
           <p>
             We strive for high availability but do not guarantee uninterrupted access. The Service
             is provided &quot;as is&quot; without warranties of any kind, express or implied.
@@ -164,7 +187,7 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="9. Account deletion">
+        <Section title="10. Account deletion">
           <p>
             You may delete your account at any time via Settings → Delete account. This
             permanently and irreversibly deletes all your components, files, profile data and
@@ -176,7 +199,7 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="10. Changes to the Terms">
+        <Section title="11. Changes to the Terms">
           <p>
             We may update these Terms from time to time. We will notify you by email at least 14
             days before significant changes take effect. Continued use of the Service after the
@@ -184,7 +207,7 @@ export default function TermsOfService() {
           </p>
         </Section>
 
-        <Section title="11. Governing law and disputes">
+        <Section title="12. Governing law and disputes">
           <p>
             These Terms are governed by French law. In the event of a dispute, the parties will
             first attempt an amicable resolution. Failing that, disputes shall be submitted to the

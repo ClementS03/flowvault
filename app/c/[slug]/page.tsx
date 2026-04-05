@@ -77,6 +77,10 @@ export default async function ComponentPage({ params }: Props) {
   const moreComponents: { id: string; slug: string; name: string; image_url: string | null; category: string | null; copy_count: number }[] = moreResult.data ?? [];
   const displayName = profile?.display_name || profile?.username || null;
 
+  const supabaseUser = createServerComponentClient({ cookies });
+  const { data: { session: userSession } } = await supabaseUser.auth.getSession();
+  const isLoggedIn = !!userSession;
+
   const host = headers().get('host') ?? '';
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`}/c/${slug}`;
@@ -148,6 +152,7 @@ export default async function ComponentPage({ params }: Props) {
             <CopyToWebflowButton
               componentId={component.id}
               signedJsonUrl={signedResult.data?.signedUrl ?? null}
+              isLoggedIn={isLoggedIn}
             />
 
             <div>
