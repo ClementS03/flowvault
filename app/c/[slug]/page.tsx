@@ -12,12 +12,14 @@ import supabaseAdmin from '@/libs/supabaseAdmin';
 
 interface Props {
   params: { slug: string };
+  searchParams?: { ref?: string };
 }
 
 export const dynamic = 'force-dynamic';
 
-export default async function ComponentPage({ params }: Props) {
+export default async function ComponentPage({ params, searchParams }: Props) {
   const { slug } = params;
+  const fromBrowse = searchParams?.ref === 'browse';
 
   const { data: component } = await supabaseAdmin
     .from('components')
@@ -80,8 +82,9 @@ export default async function ComponentPage({ params }: Props) {
   const supabaseUser = createServerComponentClient({ cookies });
   const { data: { session: userSession } } = await supabaseUser.auth.getSession();
   // Public components can be copied by anyone with the direct share link.
-  // Only private components require login to copy.
-  const isLoggedIn = component.is_public || !!userSession;
+  // If the user arrived from /browse (?ref=browse), require login to copy.
+  // Only private components always require login.
+  const isLoggedIn = (component.is_public && !fromBrowse) || !!userSession;
 
   const host = headers().get('host') ?? '';
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';

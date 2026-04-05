@@ -42,6 +42,8 @@ export default async function BrowsePage({ searchParams }: Props) {
       .order('created_at', { ascending: false })
       .limit(60);
 
+    // Always exclude components without a category from browse
+    query = query.not('category', 'is', null);
     if (category) query = query.eq('category', category);
     if (tag) query = query.contains('tags', [tag]);
 
@@ -131,7 +133,7 @@ export default async function BrowsePage({ searchParams }: Props) {
                 <div key={c.id} className="group rounded-xl border border-border bg-surface hover:border-accent/40 hover:shadow-sm transition-all flex flex-col overflow-hidden">
 
                   {/* Preview image */}
-                  <Link href={`/c/${c.slug}`} className="block">
+                  <Link href={`/c/${c.slug}?ref=browse`} className="block">
                     {c.image_url ? (
                       <div className="relative w-full h-44 overflow-hidden bg-bg border-b border-border">
                         <Image
@@ -160,7 +162,7 @@ export default async function BrowsePage({ searchParams }: Props) {
                           {c.category}
                         </span>
                       )}
-                      <Link href={`/c/${c.slug}`} className="block font-semibold text-ink text-sm leading-snug hover:text-accent transition-colors line-clamp-1">
+                      <Link href={`/c/${c.slug}?ref=browse`} className="block font-semibold text-ink text-sm leading-snug hover:text-accent transition-colors line-clamp-1">
                         {c.name}
                       </Link>
                       {c.description && (
