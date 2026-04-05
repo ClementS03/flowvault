@@ -11,34 +11,26 @@ export async function POST(
 ) {
   const { id } = params;
 
+  // Auth required to copy any component
+  const supabase = createRouteHandlerClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Validate UUID format to prevent garbage DB calls
   if (!UUID_RE.test(id)) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  // Fetch component first to determine if it's public
+  // Only increment copy_count for public components
   const { data: component } = await supabaseAdmin
     .from('components')
     .select('copy_count, is_public')
     .eq('id', id)
     .single();
 
-  if (!component) {
-    return NextResponse.json({ ok: false }, { status: 404 });
-  }
-
-  // Public components can be copied by anyone (guests via direct share link).
-  // Private components require authentication.
-  if (!component.is_public) {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  }
-
-  // Only increment copy_count for public components
-  if (component.is_public) {
+  if (component?.is_public) {
     await supabaseAdmin
       .from('components')
       .update({ copy_count: (component.copy_count ?? 0) + 1 })
