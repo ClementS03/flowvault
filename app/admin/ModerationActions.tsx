@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { rejectComponent, approveComponent } from '@/app/actions/moderateComponent';
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ModerationActions({ componentId, componentName, status }: Props) {
+  const router = useRouter();
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [reason, setReason] = useState('');
   const [sendNotif, setSendNotif] = useState(true);
@@ -28,8 +30,7 @@ export default function ModerationActions({ componentId, componentName, status }
       toast.error(result.error);
     } else {
       toast.success('Component unpublished');
-      setShowRejectForm(false);
-      setReason('');
+      router.push('/admin');
     }
   }
 
@@ -41,6 +42,7 @@ export default function ModerationActions({ componentId, componentName, status }
       toast.error(result.error);
     } else {
       toast.success('Component approved and published');
+      router.push('/admin');
     }
   }
 

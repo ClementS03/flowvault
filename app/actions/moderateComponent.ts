@@ -16,18 +16,45 @@ function isAdmin(email: string | undefined): boolean {
 }
 
 async function resolveAuthorEmail(userId: string, fallbackEmail?: string | null): Promise<string | null> {
+  // 1. Try JS admin client
   try {
     const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
-    if (error) console.error('[resolveAuthorEmail] getUserById error:', error);
-    if (authUser?.user?.email) return authUser.user.email;
+    if (error) console.error('[resolveAuthorEmail] getUserById error:', error.message);
+    if (authUser?.user?.email) {
+      console.log('[resolveAuthorEmail] Got email via admin API');
+      return authUser.user.email;
+    }
   } catch (err) {
     console.error('[resolveAuthorEmail] getUserById threw:', err);
   }
-  // Fallback: use the session email (relevant when admin unpublishes their own component)
+
+  // 2. Fallback: direct REST call to Supabase Auth Admin API
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const res = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+    });
+    if (res.ok) {
+      const user = await res.json() as { email?: string };
+      if (user?.email) {
+        console.log('[resolveAuthorEmail] Got email via REST fallback');
+        return user.email;
+      }
+    } else {
+      const body = await res.text();
+      console.error('[resolveAuthorEmail] REST API responded:', res.status, body);
+    }
+  } catch (err) {
+    console.error('[resolveAuthorEmail] REST fallback threw:', err);
+  }
+
+  // 3. Last resort: session email (when admin unpublishes their own component)
   if (fallbackEmail) {
     console.log('[resolveAuthorEmail] Using session email fallback:', fallbackEmail);
     return fallbackEmail;
   }
+
   console.warn('[resolveAuthorEmail] Could not resolve email for user:', userId);
   return null;
 }

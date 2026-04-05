@@ -17,6 +17,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [plan, setPlan] = useState<"free" | "pro" | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
@@ -27,6 +28,8 @@ const Header = () => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       setIsLoggedIn(true);
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
+      setIsAdmin(!!session.user.email && adminEmails.includes(session.user.email));
       const { data } = await supabase
         .from("profiles")
         .select("plan")
@@ -83,6 +86,11 @@ const Header = () => {
               className="text-sm font-medium text-accent hover:text-accent-h transition-colors"
             >
               Upgrade ↑
+            </Link>
+          )}
+          {isAdmin && (
+            <Link href="/admin" className="text-sm font-medium text-ink-2 hover:text-ink transition-colors">
+              Admin
             </Link>
           )}
           <Link
@@ -145,6 +153,11 @@ const Header = () => {
               {isLoggedIn && plan === "free" && (
                 <Link href="/pricing" className="text-base font-medium text-accent hover:text-accent-h" onClick={() => setIsOpen(false)}>
                   Upgrade ↑
+                </Link>
+              )}
+              {isAdmin && (
+                <Link href="/admin" className="text-base font-medium text-ink-2 hover:text-ink" onClick={() => setIsOpen(false)}>
+                  Admin
                 </Link>
               )}
               <Link href="/dashboard" className="text-base font-medium text-ink-2 hover:text-ink" onClick={() => setIsOpen(false)}>
