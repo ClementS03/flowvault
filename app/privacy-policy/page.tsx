@@ -40,11 +40,11 @@ export default function PrivacyPolicy() {
             (SIRET 909 969 685 00025), 9 rue Marie Angèle Cléret, 03130 Montcombroux-les-Mines.
           </p>
           <p>
-            Contact: <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>
+            Contact: <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">contact@clement-seguin.fr</a>
           </p>
           <p>
             As data controller, Clément Seguin is responsible for the personal data collected
-            through <strong>flowvault.io</strong> (the &quot;Service&quot;).
+            through <strong>flowvaulthq.com</strong> (the &quot;Service&quot;).
           </p>
         </Section>
 
@@ -160,7 +160,7 @@ export default function PrivacyPolicy() {
           <p>
             As a data subject under the GDPR, you have the following rights. To exercise any of
             them, contact us at{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>.
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">contact@clement-seguin.fr</a>.
             We will respond within 30 days.
           </p>
           <ul className="list-disc list-inside space-y-2 ml-1">
@@ -199,7 +199,7 @@ export default function PrivacyPolicy() {
             FlowVault is not directed to children under 16. We do not knowingly collect data from
             minors. If you believe a child has provided us with personal data, contact us
             immediately at{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>.
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">contact@clement-seguin.fr</a>.
           </p>
         </Section>
 
@@ -214,7 +214,7 @@ export default function PrivacyPolicy() {
         <div className="border-t border-border pt-8 text-sm text-ink-3">
           <p>
             Questions? Contact us at{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a>
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">contact@clement-seguin.fr</a>
           </p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { ConfigProps } from "./types/config";
 const config = {
   appName: "FlowVault",
   appDescription: "Store, share and copy Webflow components in one click.",
-  domainName: "flowvault.io",
+  domainName: "flowvaulthq.com",
   crisp: {
     id: "",
     onlyShowOnRoutes: ["/"],

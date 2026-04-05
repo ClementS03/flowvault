@@ -26,6 +26,12 @@ const handleSubmit = (e: FormEvent) => {}
 Cela s'applique à tous les types React : `ReactNode`, `FormEvent`, `MouseEvent`,
 `ChangeEvent`, `KeyboardEvent`, `CSSProperties`, `FC`, `RefObject`, etc.
 
+### Domaine — à NE PAS confondre
+- **Domaine cible :** `flowvaulthq.com` — **pas encore acquis**, utiliser dans tout le code et les docs
+- **Déploiement actuel :** `https://flowvault-ten.vercel.app`
+- **Email contact :** `contact@clement-seguin.fr` (domaine vérifié dans Resend)
+- **Ne jamais écrire** `flowvault.io` — ce domaine n'a jamais été le bon
+
 ### URL de déploiement Vercel
 `https://flowvault-ten.vercel.app` (pas flowvault.vercel.app)
 
@@ -403,7 +409,7 @@ Fichier central ShipFast — tout y passer en revue :
 // Adapter ces champs :
 appName: "FlowVault"
 appDescription: "Store, share and copy Webflow components in one click"
-domainName: "flowvault.io"  // ou le domaine réel
+domainName: "flowvaulthq.com"  // domaine cible (pas encore acquis)
 // Stripe plans : adapter les price IDs et les limites free/pro
 // Crisp ID : garder ou remplacer par un autre support chat
 ```
@@ -634,7 +640,7 @@ Une fois le setup fait, créer dans l'ordre :
 
 **Env vars à ajouter dans Vercel :**
 ```
-EMAIL_FROM=FlowVault <hello@flowvault.io>   # nécessite domaine vérifié dans Resend
+EMAIL_FROM=FlowVault <hello@flowvaulthq.com>   # nécessite domaine vérifié dans Resend (utiliser contact@clement-seguin.fr en attendant)
 ```
 `RESEND_API_KEY` est déjà présent (utilisé pour Supabase SMTP).
 
@@ -660,7 +666,7 @@ ALTER TABLE public.components
 ```
 
 **Comment ça marche (utilisation admin) :**
-1. Aller sur `flowvault.io/admin` (uniquement accessible si connecté avec l'email admin)
+1. Aller sur `flowvaulthq.com/admin` (uniquement accessible si connecté avec l'email admin)
 2. La page liste tous les composants publics dans un tableau. Chaque ligne a un bouton **Unpublish**.
 3. Cliquer "Unpublish" → pop-up pour saisir la raison + checkbox "Notify author by email"
 4. Confirmer → le composant passe en privé, `moderation_status = 'rejected'`, email envoyé si coché

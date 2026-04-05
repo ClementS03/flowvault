@@ -146,7 +146,7 @@ export default function OGImage() {
               letterSpacing: "0.5px",
             }}
           >
-            flowvault.io
+            flowvaulthq.com
           </div>
         </div>
 

@@ -1,4 +1,5 @@
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://flowvault.io';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://flowvaulthq.com';
+const DOMAIN = BASE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 const wrapper = (content: string) => `
 <!DOCTYPE html>
@@ -33,7 +34,7 @@ const wrapper = (content: string) => `
           <!-- Footer -->
           <tr>
             <td style="padding-top:24px;text-align:center;color:#94a3b8;font-size:12px;line-height:1.6;">
-              FlowVault · <a href="${BASE_URL}" style="color:#94a3b8;text-decoration:none;">flowvault.io</a><br />
+              FlowVault · <a href="${BASE_URL}" style="color:#94a3b8;text-decoration:none;">${DOMAIN}</a><br />
               <a href="${BASE_URL}/legal/terms" style="color:#94a3b8;text-decoration:none;">Terms</a> ·
               <a href="${BASE_URL}/legal/privacy" style="color:#94a3b8;text-decoration:none;">Privacy</a>
             </td>

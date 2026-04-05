@@ -43,8 +43,8 @@ export default function TermsOfService() {
           <p>
             The Service is operated by Clément Seguin, auto-entrepreneur (SIRET 909 969 685 00025),
             France. Contact:{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">
-              hello@flowvault.io
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">
+              contact@clement-seguin.fr
             </a>
           </p>
         </Section>
@@ -150,8 +150,8 @@ export default function TermsOfService() {
             <strong>Refunds</strong> — Payments are non-refundable except where required by
             applicable law. If you believe a charge was made in error, contact us within 7 days
             at{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">
-              hello@flowvault.io
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">
+              contact@clement-seguin.fr
             </a>.
           </p>
           <p>
@@ -233,8 +233,8 @@ export default function TermsOfService() {
           </p>
           <p className="text-sm text-ink-3">
             Questions?{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">
-              hello@flowvault.io
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">
+              contact@clement-seguin.fr
             </a>
           </p>
         </div>

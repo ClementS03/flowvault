@@ -81,7 +81,7 @@ ALTER TABLE public.profiles ALTER COLUMN is_private SET DEFAULT true;
 ## Resend domain
 
 Currently using `onboarding@resend.dev` → can only send to the Resend account owner's email.
-To send to all users: verify a real domain (e.g. `flowvault.io`) in Resend Dashboard, then update `EMAIL_FROM`.
+To send to all users: verify a real domain (e.g. `flowvaulthq.com` — not yet acquired) in Resend Dashboard, then update `EMAIL_FROM`.
 
 ## Next phases
 

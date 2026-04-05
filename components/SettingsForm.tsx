@@ -183,7 +183,7 @@ export default function SettingsForm({
               }`}>
                 {usernameAvailability === 'taken' ? 'This username is already taken' :
                  usernameAvailability === 'available' ? 'Username is available!' :
-                 `flowvault.io/u/${username || 'your-username'}`}
+                 `flowvaulthq.com/u/${username || 'your-username'}`}
               </p>
               {usernameChanged && initialUsername !== '' && (
                 <p className="text-xs text-amber-600 mt-1">
@@ -300,7 +300,7 @@ export default function SettingsForm({
             {!username && (
               <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
                 Set a username to get your public profile at{' '}
-                <span className="font-medium">flowvault.io/u/your-username</span>
+                <span className="font-medium">flowvaulthq.com/u/your-username</span>
               </p>
             )}
           </div>

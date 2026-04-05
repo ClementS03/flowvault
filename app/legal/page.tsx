@@ -40,7 +40,7 @@ export default function LegalPage() {
         {/* French version */}
         <Section title="1. Éditeur du site">
           <p>
-            Le site <strong>flowvault.io</strong> est édité par :
+            Le site <strong>flowvaulthq.com</strong> est édité par :
           </p>
           <div className="rounded-xl bg-surface border border-border px-5 py-4 space-y-1">
             <p><strong>Clément Seguin</strong></p>
@@ -50,8 +50,8 @@ export default function LegalPage() {
             <p>03130 Montcombroux-les-Mines, France</p>
             <p>
               Email :{" "}
-              <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">
-                hello@flowvault.io
+              <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">
+                contact@clement-seguin.fr
               </a>
             </p>
           </div>
@@ -63,7 +63,7 @@ export default function LegalPage() {
         </Section>
 
         <Section title="2. Directeur de la publication">
-          <p>Clément Seguin — <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a></p>
+          <p>Clément Seguin — <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">contact@clement-seguin.fr</a></p>
         </Section>
 
         <Section title="3. Hébergeur">
@@ -124,15 +124,15 @@ export default function LegalPage() {
           </p>
           <p>
             Responsable du traitement : Clément Seguin —{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">
-              hello@flowvault.io
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">
+              contact@clement-seguin.fr
             </a>
           </p>
           <p>
             Vous pouvez exercer vos droits (accès, rectification, effacement, portabilité,
             opposition) en contactant :{" "}
-            <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">
-              hello@flowvault.io
+            <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">
+              contact@clement-seguin.fr
             </a>
             . En cas de litige, vous pouvez déposer une plainte auprès de la{" "}
             <a
@@ -193,7 +193,7 @@ export default function LegalPage() {
             <p><strong>Publisher:</strong> Clément Seguin, sole trader (auto-entrepreneur), France</p>
             <p><strong>SIRET:</strong> 909 969 685 00025</p>
             <p><strong>Address:</strong> 9 rue Marie Angèle Cléret, 03130 Montcombroux-les-Mines, France</p>
-            <p><strong>Contact:</strong> <a href="mailto:hello@flowvault.io" className="text-accent hover:underline">hello@flowvault.io</a></p>
+            <p><strong>Contact:</strong> <a href="mailto:contact@clement-seguin.fr" className="text-accent hover:underline">contact@clement-seguin.fr</a></p>
             <p><strong>Hosting:</strong> Vercel Inc., 340 Pine Street Suite 701, San Francisco, CA 94104, USA</p>
             <p><strong>Governing law:</strong> French law</p>
             <p>

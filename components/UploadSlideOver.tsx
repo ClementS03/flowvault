@@ -236,7 +236,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
               )}
               {usernameInput && !usernameError && (
                 <p className="mt-1 text-xs text-ink-3">
-                  Your profile: <span className="text-accent">flowvault.io/u/{usernameInput.toLowerCase()}</span>
+                  Your profile: <span className="text-accent">flowvaulthq.com/u/{usernameInput.toLowerCase()}</span>
                 </p>
               )}
             </div>
