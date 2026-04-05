@@ -262,6 +262,73 @@ nécessite une R&D approfondie sur le format XscpData.
 
 ---
 
+## Features implemented (Phase 1 → 1g)
+
+### Guest access control
+- **Browse** (`/browse`): guests see max 10 components, gradient overlay + "Sign up free to see all" CTA above the fold. Implemented in `app/browse/page.tsx`.
+- **Component page** (`/c/[slug]`): guests CAN copy public components accessed via direct share link (is `isLoggedIn = component.is_public || !!userSession`). Copy count is still tracked. The copy API (`/api/components/[id]/copy`) allows unauthenticated calls for public components.
+- **Profile pages** (`/u/[username]`): guests are redirected to `/signin` — no public profile browsing.
+
+### Username uniqueness live check
+- API route: `GET /api/check-username?username=xxx` — auth-gated (401 if not logged in) to prevent username enumeration.
+- Live availability check with debounce on `/onboarding` and in `SettingsForm` (settings page).
+- Green ✓ / red ✗ indicator, button disabled while checking or if taken.
+
+### Security headers (`next.config.js`)
+X-Content-Type-Options, X-Frame-Options (DENY), X-XSS-Protection, Referrer-Policy, Permissions-Policy applied to all routes.
+
+### Email system (`libs/sendEmail.ts` + `libs/emailTemplates.ts`)
+Uses Nodemailer + Resend SMTP (`smtp.resend.com:465`). Sender: `process.env.EMAIL_FROM` (default `contact@clement-seguin.fr`).
+
+**Templates available:**
+- `welcomeEmail({})` — sent to new users on first signup
+- `newSignupEmail({ email })` — sent to `ADMIN_EMAILS` when a new user signs up
+- `moderationRejectedEmail({ componentName, reason, componentSlug })` — sent to author when unpublished
+- `moderationApprovedEmail({ componentName, componentSlug })` — sent to author when approved
+
+**When triggered:** In `app/api/auth/callback/route.ts` — detects new users via `created_at < 30s`, sends welcome + admin notification (fire-and-forget).
+
+### Admin moderation panel (`/admin`)
+- URL: `/admin` — accessible only if `session.user.email` is in `ADMIN_EMAILS` env var (comma-separated), otherwise shows Next.js 404 page (via `notFound()` in the page — NOT via middleware).
+- Not indexed: `metadata: { robots: { index: false, follow: false } }`.
+- Shows public components + `pending_review` ones in a table.
+- `ModerationActions` client component: Unpublish button (with reason modal) + Approve button.
+- Server actions: `app/actions/moderateComponent.ts` → `rejectComponent()` / `approveComponent()` — set `is_public`, `moderation_status`, `moderation_note`, send email to author.
+
+### Moderation status flow
+`null` → `is_public=true` (normal publish) → admin unpublishes → `is_public=false, moderation_status='rejected'` → user re-publishes → `is_public=false, moderation_status='pending_review'` → admin approves → `is_public=true, moderation_status='approved'`.
+
+Handled in `app/actions/updateComponent.ts`: if `moderation_status='rejected'` and user sets `is_public=true`, the row becomes `pending_review` instead of public.
+
+### Category required for public components
+- `createComponent.ts` and `updateComponent.ts` both throw/return error if `isPublic && !category`.
+- Private components don't need a category.
+
+### Moderation SQL migration
+Run this in Supabase SQL Editor if not already done:
+```sql
+ALTER TABLE public.components
+  ADD COLUMN IF NOT EXISTS moderation_status text DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS moderation_note text DEFAULT NULL;
+```
+
+### Copy protection on browse
+`/api/components/[id]/copy` requires auth for private components; allows unauthenticated for public ones (to support guest copies via share link).
+
+### JSON size limit
+5 MB hard limit enforced in `createComponent.ts` before any DB/storage calls.
+
+### bcrypt rounds
+`libs/hashPassword.ts` uses bcrypt rounds 12 (OWASP minimum).
+
+### ADMIN_EMAILS env var
+Comma-separated list of admin emails. Used in:
+- `app/admin/page.tsx` — page-level `notFound()` guard
+- `app/actions/moderateComponent.ts` — fetches author email via supabaseAdmin
+- `app/api/auth/callback/route.ts` — sends new-signup notification
+
+---
+
 ## Points de vigilance
 
 ### Clipboard — mécanisme de copie

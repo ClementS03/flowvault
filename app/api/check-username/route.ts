@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 
 export async function GET(req: NextRequest) {
+  // Only logged-in users need to check username availability
+  const supabase = createRouteHandlerClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return NextResponse.json({ available: false }, { status: 401 });
+  }
+
   const username = req.nextUrl.searchParams.get('username')?.trim().toLowerCase();
 
   if (!username || username.length < 3) {

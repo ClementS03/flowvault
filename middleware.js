@@ -7,13 +7,8 @@ export async function middleware(req) {
   const supabase = createMiddlewareClient({ req, res });
   const { data: { session } } = await supabase.auth.getSession();
 
-  // Protect /admin routes — only admin emails can access (returns 404 to non-admins)
-  if (req.nextUrl.pathname.startsWith('/admin')) {
-    const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
-    if (!session || !adminEmails.includes(session.user.email ?? '')) {
-      return new Response(null, { status: 404 });
-    }
-  }
+  // /admin is protected at the page level (notFound() call) so Next.js renders
+  // the app's custom 404 page — no middleware interception needed here.
 
   return res;
 }

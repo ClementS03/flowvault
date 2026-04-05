@@ -79,7 +79,9 @@ export default async function ComponentPage({ params }: Props) {
 
   const supabaseUser = createServerComponentClient({ cookies });
   const { data: { session: userSession } } = await supabaseUser.auth.getSession();
-  const isLoggedIn = !!userSession;
+  // Public components can be copied by anyone with the direct share link.
+  // Only private components require login to copy.
+  const isLoggedIn = component.is_public || !!userSession;
 
   const host = headers().get('host') ?? '';
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';

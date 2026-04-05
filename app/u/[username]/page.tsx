@@ -1,4 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfileComponentCard from '@/components/ProfileComponentCard';
@@ -12,6 +14,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function UserProfilePage({ params }: Props) {
   const { username } = params;
+
+  // Guests cannot view profiles — require login
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    redirect('/signin');
+  }
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')

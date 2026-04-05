@@ -37,6 +37,7 @@ export async function createComponent(
   if (!name) throw new Error('Component name is required');
   if (name.length > 60) throw new Error('Name must be 60 characters or less');
   if (description && description.length > 200) throw new Error('Description must be 200 characters or less');
+  if (isPublic && !category) throw new Error('Category is required to make a component public');
 
   // Validate Webflow JSON — split so inner parse error isn't swallowed by type check
   if (jsonString.length > 5 * 1024 * 1024) {

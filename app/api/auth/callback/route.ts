@@ -3,7 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { claimComponent } from '@/app/actions/claimComponent';
 import { sendEmail } from '@/libs/sendEmail';
-import { welcomeEmail } from '@/libs/emailTemplates';
+import { welcomeEmail, newSignupEmail } from '@/libs/emailTemplates';
 import config from '@/config';
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +51,16 @@ export async function GET(req: NextRequest) {
             subject: 'Welcome to FlowVault 👋',
             html: welcomeEmail({}),
           }).catch((err) => console.error('[welcome email]', err));
+
+          // Notify admin of new signup
+          const adminEmails = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
+          if (adminEmails.length > 0) {
+            sendEmail({
+              to: adminEmails.join(','),
+              subject: 'New FlowVault signup',
+              html: newSignupEmail({ email: data.session.user.email }),
+            }).catch((err) => console.error('[signup notification]', err));
+          }
         }
       }
     }

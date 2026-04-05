@@ -89,6 +89,25 @@ export function welcomeEmail({ username }: { username?: string }) {
   `);
 }
 
+export function newSignupEmail({ email }: { email: string }) {
+  return wrapper(`
+    <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;">New FlowVault signup 🎉</h1>
+    <p style="margin:0 0 20px;font-size:15px;color:#64748b;line-height:1.6;">
+      A new user just created an account on FlowVault.
+    </p>
+
+    <div style="background:#fafafe;border:1px solid #f1f3f8;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Email</p>
+      <p style="margin:0;font-size:14px;color:#0f172a;">${email}</p>
+    </div>
+
+    <a href="${BASE_URL}/admin"
+       style="display:inline-block;background:#6366f1;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;">
+      Go to Admin →
+    </a>
+  `);
+}
+
 export function moderationRejectedEmail({
   componentName,
   reason,

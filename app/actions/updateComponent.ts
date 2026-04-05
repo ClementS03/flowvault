@@ -45,6 +45,7 @@ export async function updateComponent(
   if (!name) return { error: 'Name is required' };
   if (name.length > 60) return { error: 'Name must be 60 characters or less' };
   if (description && description.length > 200) return { error: 'Description must be 200 characters or less' };
+  if (isPublic && !category) return { error: 'Category is required to make a component public' };
 
   // 5. Handle image
   let imageUrl: string | null | undefined = undefined; // undefined = no change
