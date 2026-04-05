@@ -1,6 +1,6 @@
-# FlowVault — Context for Claude
+# FlowVault — Project Context
 
-> Quick reference for AI assistants picking up this project. Full details in `CLAUDE.md`.
+> Quick reference for picking up this project. Full details in `CLAUDE.md`.
 
 ## Current state (2026-04-05)
 
@@ -104,4 +104,4 @@ Enforce free limit (10 components), upgrade flow, billing portal. ShipFast webho
 - `ADMIN_EMAILS` is the single source of truth for admin access.
 - `/admin` is protected at page level via `notFound()` — NOT in middleware (to show the app's 404 page).
 - Category is required to make a component public.
-- No `Co-Authored-By: Claude` in commits.
+- No AI co-author lines in commits.
