@@ -33,6 +33,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -94,9 +95,11 @@ export default function UploadSlideOver({ json, onClose }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be under 2MB');
+      setImageError(`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB) — max 2 MB`);
+      e.target.value = '';
       return;
     }
+    setImageError(null);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     const url = URL.createObjectURL(file);
     setImagePreview(url);
@@ -301,6 +304,11 @@ export default function UploadSlideOver({ json, onClose }: Props) {
                 className="hidden"
                 onChange={handleImageChange}
               />
+              {imageError ? (
+                <p className="mt-1.5 text-xs text-red-500">{imageError}</p>
+              ) : (
+                <p className="mt-1.5 text-xs text-ink-3">JPEG or PNG · max 2 MB</p>
+              )}
             </div>
 
             {/* Name */}
