@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import CopyToWebflowButton from '@/components/CopyToWebflowButton';
 import CopyLinkButton from '@/components/CopyLinkButton';
 import PasswordGate from './PasswordGate';
+import ModerationActions from '@/app/admin/ModerationActions';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 
 interface Props {
@@ -21,7 +22,7 @@ export default async function ComponentPage({ params }: Props) {
 
   const { data: component } = await supabaseAdmin
     .from('components')
-    .select('id, name, description, category, tags, image_url, copy_count, json_path, is_public, is_temporary, expires_at, user_id, password_hash')
+    .select('id, name, description, category, tags, image_url, copy_count, json_path, is_public, is_temporary, expires_at, user_id, password_hash, moderation_status')
     .eq('slug', slug)
     .single();
 
@@ -81,6 +82,8 @@ export default async function ComponentPage({ params }: Props) {
   const supabaseUser = createServerComponentClient({ cookies });
   const { data: { session: userSession } } = await supabaseUser.auth.getSession();
   const isLoggedIn = !!userSession;
+  const ADMIN_LIST = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
+  const isAdmin = !!userSession && ADMIN_LIST.includes(userSession.user.email ?? '');
 
   const host = headers().get('host') ?? '';
   const proto = process.env.NODE_ENV === 'production' ? 'https' : 'http';
@@ -91,6 +94,18 @@ export default async function ComponentPage({ params }: Props) {
       <Header />
       <main className="flex-1 px-[var(--px-site)] py-16">
         <div className="max-w-2xl mx-auto">
+
+          {/* Admin bar */}
+          {isAdmin && (
+            <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
+              <span className="text-sm font-medium text-amber-700">Admin</span>
+              <ModerationActions
+                componentId={component.id}
+                componentName={component.name}
+                status={component.moderation_status ?? null}
+              />
+            </div>
+          )}
 
           {/* Header */}
           <div className="mb-8">

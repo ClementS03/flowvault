@@ -16,7 +16,18 @@ export const metadata: Metadata = {
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
 
-export default async function AdminPage() {
+interface Props {
+  searchParams?: { filter?: string; q?: string };
+}
+
+type Component = {
+  id: string; slug: string; name: string; description: string | null;
+  category: string | null; image_url: string | null; copy_count: number;
+  created_at: string; user_id: string | null; moderation_status: string | null;
+  moderation_note: string | null; is_public: boolean;
+};
+
+export default async function AdminPage({ searchParams }: Props) {
   const supabase = createServerComponentClient({ cookies });
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -24,19 +35,54 @@ export default async function AdminPage() {
     notFound();
   }
 
-  // Fetch all public components + pending review — ordered so pending appears first
-  const { data: components } = await supabaseAdmin
-    .from('components')
-    .select('id, slug, name, description, category, image_url, copy_count, created_at, user_id, moderation_status, moderation_note, is_public')
-    .or('is_public.eq.true,moderation_status.eq.pending_review')
-    .eq('is_temporary', false)
-    .order('moderation_status', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-    .limit(100);
+  const adminUserId = session.user.id;
+  const filter = searchParams?.filter ?? 'all'; // 'all' | 'pending' | 'mine'
+  const q = searchParams?.q?.trim() || null;
 
-  const userIds = Array.from(new Set((components ?? []).map((c) => c.user_id).filter(Boolean)));
-  const profileMap: Record<string, { username: string | null; email?: string }> = {};
+  const SELECT = 'id, slug, name, description, category, image_url, copy_count, created_at, user_id, moderation_status, moderation_note, is_public';
 
+  // Two focused queries — pending (all users) + mine (admin's own public)
+  const [pendingResult, mineResult] = await Promise.all([
+    (filter === 'mine') ? Promise.resolve({ data: [] as Component[] }) : (async () => {
+      let q2 = supabaseAdmin
+        .from('components')
+        .select(SELECT)
+        .eq('moderation_status', 'pending_review')
+        .eq('is_temporary', false)
+        .order('created_at', { ascending: false });
+      if (q) q2 = q2.ilike('name', `%${q}%`);
+      const { data } = await q2;
+      return { data: (data ?? []) as Component[] };
+    })(),
+
+    (filter === 'pending') ? Promise.resolve({ data: [] as Component[] }) : (async () => {
+      let q2 = supabaseAdmin
+        .from('components')
+        .select(SELECT)
+        .eq('user_id', adminUserId)
+        .eq('is_public', true)
+        .eq('is_temporary', false)
+        .order('created_at', { ascending: false });
+      if (q) q2 = q2.ilike('name', `%${q}%`);
+      const { data } = await q2;
+      return { data: (data ?? []) as Component[] };
+    })(),
+  ]);
+
+  // Merge + deduplicate (admin's pending component can appear in both)
+  const seen = new Set<string>();
+  const components: Component[] = [
+    ...pendingResult.data,
+    ...mineResult.data,
+  ].filter((c) => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
+
+  // Fetch author profiles
+  const userIds = Array.from(new Set(components.map((c) => c.user_id).filter(Boolean)));
+  const profileMap: Record<string, { username: string | null }> = {};
   if (userIds.length > 0) {
     const { data: profiles } = await supabaseAdmin
       .from('profiles')
@@ -45,23 +91,68 @@ export default async function AdminPage() {
     for (const p of profiles ?? []) profileMap[p.id] = p;
   }
 
-  const pending = (components ?? []).filter((c) => c.moderation_status === 'pending_review');
-  const live = (components ?? []).filter((c) => c.is_public && c.moderation_status !== 'pending_review');
+  const pending = components.filter((c) => c.moderation_status === 'pending_review');
+  const live = components.filter((c) => c.is_public && c.moderation_status !== 'pending_review');
+
+  const tabs = [
+    { key: 'all', label: 'All', count: pending.length + live.length },
+    { key: 'pending', label: 'Pending review', count: pendingResult.data.length },
+    { key: 'mine', label: 'My components', count: mineResult.data.length },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-bg">
       <Header />
       <main className="flex-1 mx-auto w-full px-[var(--px-site)] py-16" style={{ maxWidth: 'var(--max-width)' }}>
 
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="font-heading text-3xl font-bold text-ink mb-1">Admin — Moderation</h1>
-            <p className="text-ink-2 text-sm">{live.length} public · {pending.length} pending review</p>
+        <div className="mb-8">
+          <h1 className="font-heading text-3xl font-bold text-ink mb-1">Admin — Moderation</h1>
+          <p className="text-ink-2 text-sm">{pending.length} pending · {live.length} public</p>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+          {/* Tabs */}
+          <div className="flex items-center gap-1 bg-surface border border-border rounded-lg p-1">
+            {tabs.map((tab) => (
+              <Link
+                key={tab.key}
+                href={`/admin?filter=${tab.key}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                  filter === tab.key
+                    ? 'bg-bg text-ink shadow-sm border border-border'
+                    : 'text-ink-2 hover:text-ink'
+                }`}
+              >
+                {tab.label}
+                <span className={`text-xs rounded-full px-1.5 py-0.5 ${
+                  filter === tab.key ? 'bg-accent text-white' : 'bg-border text-ink-3'
+                }`}>
+                  {tab.count}
+                </span>
+              </Link>
+            ))}
           </div>
+
+          {/* Search */}
+          <form method="get" action="/admin" className="flex-1 flex items-center gap-2 max-w-xs">
+            <input type="hidden" name="filter" value={filter} />
+            <input
+              name="q"
+              defaultValue={q ?? ''}
+              placeholder="Search by name…"
+              className="w-full border border-border rounded-lg px-3 py-1.5 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+            />
+            {q && (
+              <Link href={`/admin?filter=${filter}`} className="text-xs text-ink-3 hover:text-ink whitespace-nowrap">
+                Clear
+              </Link>
+            )}
+          </form>
         </div>
 
         {/* Pending review */}
-        {pending.length > 0 && (
+        {(filter === 'all' || filter === 'pending') && pending.length > 0 && (
           <section className="mb-10">
             <h2 className="font-heading font-semibold text-lg text-ink mb-4 flex items-center gap-2">
               <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold">{pending.length}</span>
@@ -72,10 +163,16 @@ export default async function AdminPage() {
         )}
 
         {/* Live */}
-        <section>
-          <h2 className="font-heading font-semibold text-lg text-ink mb-4">Public components</h2>
-          <ComponentTable components={live} profileMap={profileMap} />
-        </section>
+        {(filter === 'all' || filter === 'mine') && (
+          <section>
+            <h2 className="font-heading font-semibold text-lg text-ink mb-4">My public components</h2>
+            <ComponentTable components={live} profileMap={profileMap} />
+          </section>
+        )}
+
+        {components.length === 0 && (
+          <p className="text-sm text-ink-3 mt-8">No components match your filters.</p>
+        )}
 
       </main>
     </div>
@@ -83,12 +180,7 @@ export default async function AdminPage() {
 }
 
 function ComponentTable({ components, profileMap }: {
-  components: {
-    id: string; slug: string; name: string; description: string | null;
-    category: string | null; image_url: string | null; copy_count: number;
-    created_at: string; user_id: string | null; moderation_status: string | null;
-    moderation_note: string | null; is_public: boolean;
-  }[];
+  components: Component[];
   profileMap: Record<string, { username: string | null }>;
 }) {
   if (components.length === 0) {

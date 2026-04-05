@@ -57,15 +57,19 @@ export async function rejectComponent(
       const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(component.user_id);
       const authorEmail = authUser?.user?.email;
       if (authorEmail) {
-        sendEmail({
-          to: authorEmail,
-          subject: `Your component "${component.name}" was removed from Browse`,
-          html: moderationRejectedEmail({
-            componentName: component.name,
-            reason,
-            componentSlug: component.slug,
-          }),
-        }).catch((err) => console.error('[moderation email]', err));
+        try {
+          await sendEmail({
+            to: authorEmail,
+            subject: `Your component "${component.name}" was removed from Browse`,
+            html: moderationRejectedEmail({
+              componentName: component.name,
+              reason,
+              componentSlug: component.slug,
+            }),
+          });
+        } catch (err) {
+          console.error('[moderation rejected email] Failed to send to', authorEmail, ':', err);
+        }
       }
     }
   }
@@ -107,14 +111,18 @@ export async function approveComponent(componentId: string): Promise<Result> {
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(component.user_id);
     const authorEmail = authUser?.user?.email;
     if (authorEmail) {
-      sendEmail({
-        to: authorEmail,
-        subject: `Your component "${component.name}" is now live on Browse 🎉`,
-        html: moderationApprovedEmail({
-          componentName: component.name,
-          componentSlug: component.slug,
-        }),
-      }).catch((err) => console.error('[moderation email]', err));
+      try {
+        await sendEmail({
+          to: authorEmail,
+          subject: `Your component "${component.name}" is now live on Browse 🎉`,
+          html: moderationApprovedEmail({
+            componentName: component.name,
+            componentSlug: component.slug,
+          }),
+        });
+      } catch (err) {
+        console.error('[moderation approved email] Failed to send to', authorEmail, ':', err);
+      }
     }
   }
 
