@@ -232,15 +232,27 @@ Auth + Upload + Stockage + Lien de partage + Copy to Webflow + Dashboard basique
 Redesign page profil (layout 2 colonnes desktop / colonne mobile) · Upload avatar custom · Toggle profil privé
 Spec : `docs/superpowers/specs/2026-04-03-profile-ux-avatar-design.md`
 
-### Phase 2 — Marketplace & Discovery
-Browse complet · Recherche full-text · Filtres (catégorie, tags) · Tri (trending, newest) · Favoris
+### Phase 2 — Marketplace & Discovery ⚠️ En cours
+Partiellement implémenté :
+- ✅ Filtres catégorie (URL-based, pill buttons dans BrowseFilters.tsx)
+- ✅ Tri par copy_count desc (trending) + created_at desc (newest) — `app/browse/page.tsx` lignes 41-42
+- ❌ Recherche full-text (pas de search box, pas de tsvector Supabase)
+- ❌ Favoris / composants sauvegardés
+- ❌ Preview visuel (screenshot)
+- ❌ Composants liés
+
+Prochaine étape : ajouter un champ de recherche dans BrowseFilters.tsx + colonne `search_vector tsvector` dans Supabase + `textSearch()` dans la query.
 
 ### Phase 2b — Social Graph
 Follow/unfollow entre utilisateurs · Table `follows` · Composants sauvegardés (`saves`) · Sidebar profil dynamique (following list + saved components) · Compteurs followers/following · Enforcement vie privée dans le browse
 À brainstormer avant implémentation.
 
-### Phase 3 — Abonnement
-Stripe Pro illimité · Enforcement limites free · Upgrade flow · Portail facturation (ShipFast déjà câblé)
+### Phase 3 — Abonnement ✅ Implémenté
+- ✅ Stripe checkout (`/api/stripe/create-checkout`) — Stripe customer créé/récupéré, checkout URL signée
+- ✅ Webhooks : `checkout.session.completed` → `plan='pro'` + `customer_id`, `customer.subscription.deleted` + `invoice.payment_failed` → `plan='free'`
+- ✅ Enforcement limite free dans `createComponent.ts` (throw `FREE_LIMIT_REACHED` si free + component_count >= 10)
+- ✅ Upgrade banner dans dashboard (apparaît à 8+ composants pour free)
+- ✅ Portail facturation (`/api/stripe/create-portal`) — endpoint câblé via ShipFast
 
 ### Phase 4 — Polish & Growth
 Preview visuel des composants · Collections · Analytics créateur · Embed widget · API publique
