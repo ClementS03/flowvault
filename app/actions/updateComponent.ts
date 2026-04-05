@@ -99,9 +99,14 @@ export async function updateComponent(
   // 6. Build update payload — only include image_url if it changed
   // If the component was previously rejected and the user is trying to re-publish,
   // set moderation_status to 'pending_review' instead of making it directly public.
+  // Exception: admins bypass pending_review (they are the reviewers).
+  const ADMIN_LIST = (process.env.ADMIN_EMAILS ?? '').split(',').map((e) => e.trim()).filter(Boolean);
+  const isAdminUser = !!session.user.email && ADMIN_LIST.includes(session.user.email);
+
   const wasRejected = component.moderation_status === 'rejected';
-  const actualIsPublic = wasRejected && isPublic ? false : isPublic;
-  const newModerationStatus = wasRejected && isPublic ? 'pending_review' : null;
+  const needsReview = wasRejected && isPublic && !isAdminUser;
+  const actualIsPublic = needsReview ? false : isPublic;
+  const newModerationStatus = needsReview ? 'pending_review' : null;
 
   const updatePayload: Record<string, unknown> = {
     name,

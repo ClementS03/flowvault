@@ -15,6 +15,23 @@ function isAdmin(email: string | undefined): boolean {
   return !!email && ADMIN_EMAILS.includes(email);
 }
 
+async function resolveAuthorEmail(userId: string, fallbackEmail?: string | null): Promise<string | null> {
+  try {
+    const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (error) console.error('[resolveAuthorEmail] getUserById error:', error);
+    if (authUser?.user?.email) return authUser.user.email;
+  } catch (err) {
+    console.error('[resolveAuthorEmail] getUserById threw:', err);
+  }
+  // Fallback: use the session email (relevant when admin unpublishes their own component)
+  if (fallbackEmail) {
+    console.log('[resolveAuthorEmail] Using session email fallback:', fallbackEmail);
+    return fallbackEmail;
+  }
+  console.warn('[resolveAuthorEmail] Could not resolve email for user:', userId);
+  return null;
+}
+
 /** Admin rejects a public component — makes it private, optionally emails the author */
 export async function rejectComponent(
   componentId: string,
@@ -45,31 +62,27 @@ export async function rejectComponent(
 
   if (updateError) return { error: 'Failed to update component' };
 
-  // Email the author if requested
-  if (sendNotification && component.user_id) {
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('id', component.user_id)
-      .single();
+  console.log('[rejectComponent] DB updated. sendNotification:', sendNotification, 'user_id:', component.user_id);
 
-    if (profile) {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(component.user_id);
-      const authorEmail = authUser?.user?.email;
-      if (authorEmail) {
-        try {
-          await sendEmail({
-            to: authorEmail,
-            subject: `Your component "${component.name}" was removed from Browse`,
-            html: moderationRejectedEmail({
-              componentName: component.name,
-              reason,
-              componentSlug: component.slug,
-            }),
-          });
-        } catch (err) {
-          console.error('[moderation rejected email] Failed to send to', authorEmail, ':', err);
-        }
+  if (sendNotification && component.user_id) {
+    // Use session email as fallback (admin unpublishing their own component)
+    const sessionEmail = session.user.id === component.user_id ? session.user.email : null;
+    const authorEmail = await resolveAuthorEmail(component.user_id, sessionEmail);
+
+    if (authorEmail) {
+      try {
+        await sendEmail({
+          to: authorEmail,
+          subject: `Your component "${component.name}" was removed from Browse`,
+          html: moderationRejectedEmail({
+            componentName: component.name,
+            reason,
+            componentSlug: component.slug,
+          }),
+        });
+        console.log('[rejectComponent] Email sent to', authorEmail);
+      } catch (err) {
+        console.error('[rejectComponent] Email failed:', err);
       }
     }
   }
@@ -106,10 +119,10 @@ export async function approveComponent(componentId: string): Promise<Result> {
 
   if (updateError) return { error: 'Failed to approve component' };
 
-  // Email the author
+  console.log('[approveComponent] DB updated. user_id:', component.user_id);
+
   if (component.user_id) {
-    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(component.user_id);
-    const authorEmail = authUser?.user?.email;
+    const authorEmail = await resolveAuthorEmail(component.user_id);
     if (authorEmail) {
       try {
         await sendEmail({
@@ -120,8 +133,9 @@ export async function approveComponent(componentId: string): Promise<Result> {
             componentSlug: component.slug,
           }),
         });
+        console.log('[approveComponent] Email sent to', authorEmail);
       } catch (err) {
-        console.error('[moderation approved email] Failed to send to', authorEmail, ':', err);
+        console.error('[approveComponent] Email failed:', err);
       }
     }
   }

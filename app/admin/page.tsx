@@ -216,7 +216,10 @@ function ComponentTable({ components, profileMap }: {
                         {c.name}
                       </Link>
                       {c.moderation_status === 'pending_review' && c.moderation_note && (
-                        <p className="text-xs text-amber-600 mt-0.5 line-clamp-1">Previously rejected: {c.moderation_note}</p>
+                        <p className="text-xs text-amber-600 mt-0.5 line-clamp-2">Previously rejected: {c.moderation_note}</p>
+                      )}
+                      {c.moderation_status === 'rejected' && c.moderation_note && (
+                        <p className="text-xs text-red-500 mt-0.5 line-clamp-2">Reason: {c.moderation_note}</p>
                       )}
                     </div>
                   </div>
