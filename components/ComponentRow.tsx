@@ -19,6 +19,8 @@ interface ComponentRowProps {
   signedJsonUrl: string;
   description?: string | null;
   tags?: string[];
+  moderationStatus?: string | null;
+  moderationNote?: string | null;
 }
 
 /** Inline tooltip wrapper — shows label above child on hover */
@@ -44,6 +46,8 @@ export default function ComponentRow({
   signedJsonUrl,
   description = null,
   tags = [],
+  moderationStatus = null,
+  moderationNote = null,
 }: ComponentRowProps) {
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -280,6 +284,30 @@ export default function ComponentRow({
           )}
         </div>
       </div>
+
+      {/* Rejection notice */}
+      {moderationStatus === 'rejected' && (
+        <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border-b border-red-100 last:border-0 last:rounded-b-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-red-500 shrink-0 mt-0.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-red-700">Removed from Browse by a moderator</p>
+            {moderationNote && (
+              <p className="text-xs text-red-600 mt-0.5">{moderationNote}</p>
+            )}
+            <p className="text-xs text-red-500 mt-1">
+              Your component is still in your library. Edit it and make it public again to resubmit for review.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="shrink-0 text-xs font-medium text-red-700 hover:text-red-900 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-md transition-colors"
+          >
+            Edit & resubmit →
+          </button>
+        </div>
+      )}
 
       {/* Edit modal */}
       {showEditModal && (

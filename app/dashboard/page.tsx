@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   const [{ data: components }, { data: profile }] = await Promise.all([
     supabaseAdmin
       .from('components')
-      .select('id, name, slug, category, description, tags, image_url, is_public, copy_count, created_at, json_path')
+      .select('id, name, slug, category, description, tags, image_url, is_public, copy_count, created_at, json_path, moderation_status, moderation_note')
       .eq('user_id', userId)
       .eq('is_temporary', false)
       .order('created_at', { ascending: false }),
@@ -140,6 +140,8 @@ export default async function DashboardPage() {
                 signedJsonUrl={signedUrls[c.id] ?? ''}
                 description={c.description}
                 tags={c.tags ?? []}
+                moderationStatus={c.moderation_status ?? null}
+                moderationNote={c.moderation_note ?? null}
               />
             ))}
           </div>
