@@ -60,7 +60,6 @@ export default async function AdminPage({ searchParams }: Props) {
         .from('components')
         .select(SELECT)
         .eq('user_id', adminUserId)
-        .eq('is_public', true)
         .eq('is_temporary', false)
         .order('created_at', { ascending: false });
       if (q) q2 = q2.ilike('name', `%${q}%`);
@@ -92,7 +91,7 @@ export default async function AdminPage({ searchParams }: Props) {
   }
 
   const pending = components.filter((c) => c.moderation_status === 'pending_review');
-  const live = components.filter((c) => c.is_public && c.moderation_status !== 'pending_review');
+  const live = components.filter((c) => c.moderation_status !== 'pending_review');
 
   const tabs = [
     { key: 'all', label: 'All', count: pending.length + live.length },
@@ -162,10 +161,10 @@ export default async function AdminPage({ searchParams }: Props) {
           </section>
         )}
 
-        {/* Live */}
+        {/* Mine */}
         {(filter === 'all' || filter === 'mine') && (
           <section>
-            <h2 className="font-heading font-semibold text-lg text-ink mb-4">My public components</h2>
+            <h2 className="font-heading font-semibold text-lg text-ink mb-4">My components</h2>
             <ComponentTable components={live} profileMap={profileMap} />
           </section>
         )}
@@ -195,6 +194,7 @@ function ComponentTable({ components, profileMap }: {
             <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wider">Component</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wider hidden sm:table-cell">Author</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wider hidden md:table-cell">Category</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wider hidden md:table-cell">Status</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wider hidden md:table-cell">Copies</th>
             <th className="text-right px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wider">Action</th>
           </tr>
@@ -232,6 +232,15 @@ function ComponentTable({ components, profileMap }: {
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell">
                   <span className="text-ink-2 capitalize">{c.category ?? '—'}</span>
+                </td>
+                <td className="px-4 py-3 hidden md:table-cell">
+                  {c.is_public ? (
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Public</span>
+                  ) : c.moderation_status === 'rejected' ? (
+                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Rejected</span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-surface border border-border px-2 py-0.5 text-xs font-medium text-ink-3">Private</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell text-ink-2">{c.copy_count}</td>
                 <td className="px-4 py-3 text-right">

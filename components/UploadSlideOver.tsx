@@ -111,6 +111,14 @@ export default function UploadSlideOver({ json, onClose }: Props) {
       const formData = new FormData(e.currentTarget);
       formData.set('is_public', String(isPublic));
 
+      // Validate category when making public
+      const category = (formData.get('category') as string) || '';
+      if (isPublic && !category) {
+        toast.error('A category is required to make a component public');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validate tags max-5 client-side (server also enforces this)
       const tagsRaw = (formData.get('tags') as string) || '';
       const tagCount = tagsRaw.split(',').map((t) => t.trim()).filter(Boolean).length;
@@ -330,12 +338,12 @@ export default function UploadSlideOver({ json, onClose }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-ink mb-1.5">
-                  Category <span className="text-red-500">*</span>
+                  Category{isPublic && <span className="text-red-500 ml-1">*</span>}
+                  {!isPublic && <span className="text-ink-3 font-normal ml-1">(required if public)</span>}
                 </label>
                 <select
                   id="category"
                   name="category"
-                  required
                   defaultValue=""
                   className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                 >

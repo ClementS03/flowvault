@@ -89,8 +89,8 @@ export default function EditComponentModal({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!category) {
-      toast.error('Please select a category');
+    if (isPublic && !category) {
+      toast.error('A category is required to make a component public');
       return;
     }
     setIsSaving(true);
@@ -178,7 +178,8 @@ export default function EditComponentModal({
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5">
-              Category <span className="text-red-500">*</span>
+              Category{isPublic && <span className="text-red-500 ml-1">*</span>}
+              {!isPublic && <span className="text-ink-3 font-normal ml-1">(required if public)</span>}
             </label>
             <select
               value={category}
