@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import Image from 'next/image';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import Header from '@/components/Header';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 import ResultSignInPanel from '@/components/ResultSignInPanel';
@@ -24,6 +25,10 @@ export default async function ResultPage({ searchParams }: Props) {
     .single();
 
   if (!component) notFound();
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { session } } = await supabase.auth.getSession();
+  const isLoggedIn = !!session;
 
   const { data: signedData } = await supabaseAdmin.storage
     .from('components-json')
@@ -88,6 +93,7 @@ export default async function ResultPage({ searchParams }: Props) {
               <CopyToWebflowButton
                 componentId={component.id}
                 signedJsonUrl={signedData?.signedUrl ?? null}
+                isLoggedIn={isLoggedIn}
               />
 
               {component.is_temporary && (
