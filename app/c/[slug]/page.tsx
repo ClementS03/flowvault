@@ -65,6 +65,7 @@ export default async function ComponentPage({ params, searchParams }: Props) {
           .eq('user_id', component.user_id)
           .eq('is_public', true)
           .eq('is_temporary', false)
+          .not('category', 'is', null)
           .neq('id', component.id)
           .order('copy_count', { ascending: false })
           .limit(3)
