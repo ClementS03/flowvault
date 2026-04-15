@@ -13,10 +13,11 @@ const GUEST_LIMIT = 10;
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: { category?: string; tag?: string };
+  searchParams: { tab?: string; category?: string; tag?: string };
 }
 
 export default async function BrowsePage({ searchParams }: Props) {
+  const tab = searchParams.tab ?? 'components';
   const category = searchParams.category?.trim() || null;
   const tag = searchParams.tag?.trim() || null;
 
@@ -29,38 +30,68 @@ export default async function BrowsePage({ searchParams }: Props) {
     category: string | null; tags: string[] | null; image_url: string | null;
     copy_count: number; created_at: string; user_id: string | null;
   }[] = [];
+
+  let kitList: {
+    id: string; slug: string; name: string; description: string | null;
+    copy_count: number; created_at: string; user_id: string;
+    kit_components: { component_id: string }[];
+  }[] = [];
+
   const profileMap: Record<string, { username: string | null; display_name: string | null; avatar_url: string | null }> = {};
 
   try {
-    // 1. Fetch matching public components
-    let query = supabaseAdmin
-      .from('components')
-      .select('id, slug, name, description, category, tags, image_url, copy_count, created_at, user_id')
-      .eq('is_public', true)
-      .eq('is_temporary', false)
-      .order('copy_count', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(60);
+    if (tab === 'kits') {
+      const { data: kits, error: kitsError } = await supabaseAdmin
+        .from('kits')
+        .select('id, slug, name, description, copy_count, created_at, user_id, kit_components(component_id)')
+        .eq('is_public', true)
+        .order('copy_count', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(60);
+      if (kitsError) console.error('[browse] kits query error:', kitsError.message);
+      kitList = kits ?? [];
 
-    // Always exclude components without a category from browse
-    query = query.not('category', 'is', null);
-    if (category) query = query.eq('category', category);
-    if (tag) query = query.contains('tags', [tag]);
+      const userIds = Array.from(new Set(kitList.map((k) => k.user_id).filter(Boolean)));
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, username, display_name, avatar_url')
+          .in('id', userIds);
+        if (profilesError) console.error('[browse] profiles query error:', profilesError.message);
+        for (const p of profiles ?? []) {
+          profileMap[p.id] = p;
+        }
+      }
+    } else {
+      const typeFilter = tab === 'pages' ? 'page_template' : 'component';
+      let query = supabaseAdmin
+        .from('components')
+        .select('id, slug, name, description, category, tags, image_url, copy_count, created_at, user_id')
+        .eq('is_public', true)
+        .eq('is_temporary', false)
+        .eq('type', typeFilter)
+        .order('copy_count', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(60);
 
-    const { data: components, error: componentsError } = await query;
-    if (componentsError) console.error('[browse] components query error:', componentsError.message);
-    list = components ?? [];
+      query = query.not('category', 'is', null);
+      if (category) query = query.eq('category', category);
+      if (tag) query = query.contains('tags', [tag]);
 
-    // 2. Fetch profiles for the authors
-    const userIds = Array.from(new Set(list.map((c) => c.user_id).filter(Boolean)));
-    if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabaseAdmin
-        .from('profiles')
-        .select('id, username, display_name, avatar_url')
-        .in('id', userIds);
-      if (profilesError) console.error('[browse] profiles query error:', profilesError.message);
-      for (const p of profiles ?? []) {
-        profileMap[p.id] = p;
+      const { data: components, error: componentsError } = await query;
+      if (componentsError) console.error('[browse] components query error:', componentsError.message);
+      list = components ?? [];
+
+      const userIds = Array.from(new Set(list.map((c) => c.user_id).filter(Boolean)));
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, username, display_name, avatar_url')
+          .in('id', userIds);
+        if (profilesError) console.error('[browse] profiles query error:', profilesError.message);
+        for (const p of profiles ?? []) {
+          profileMap[p.id] = p;
+        }
       }
     }
   } catch (err) {
@@ -74,8 +105,14 @@ export default async function BrowsePage({ searchParams }: Props) {
 
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="font-heading text-3xl font-bold text-ink mb-2">Browse components</h1>
-          <p className="text-ink-2">Discover and copy Webflow components from the community</p>
+          <h1 className="font-heading text-3xl font-bold text-ink mb-2">
+            {tab === 'pages' ? 'Browse page templates' : tab === 'kits' ? 'Browse kits' : 'Browse components'}
+          </h1>
+          <p className="text-ink-2">
+            {tab === 'kits'
+              ? 'Curated collections of Webflow components'
+              : 'Discover and copy Webflow components from the community'}
+          </p>
         </div>
 
         {/* Filters */}
@@ -84,22 +121,22 @@ export default async function BrowsePage({ searchParams }: Props) {
         </Suspense>
 
         {/* Results count */}
-        {(category || tag) && (
+        {tab !== 'kits' && (category || tag) && (
           <p className="text-sm text-ink-3 mb-5">
-            {list.length} component{list.length !== 1 ? 's' : ''}
+            {list.length} {tab === 'pages' ? 'page template' : 'component'}{list.length !== 1 ? 's' : ''}
             {category ? ` in "${category}"` : ''}
             {tag ? ` tagged "${tag}"` : ''}
           </p>
         )}
 
-        {/* Guest banner */}
-        {!isLoggedIn && list.length > 0 && (
+        {/* Guest banner — components/pages tabs only */}
+        {tab !== 'kits' && !isLoggedIn && list.length > 0 && (
           <div className="mb-6 flex items-center gap-3 rounded-xl border border-accent/20 bg-accent-bg px-5 py-3.5">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-accent shrink-0">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
             <p className="text-sm text-accent font-medium flex-1">
-              Showing {Math.min(GUEST_LIMIT, list.length)} of {list.length} components —{' '}
+              Showing {Math.min(GUEST_LIMIT, list.length)} of {list.length} {tab === 'pages' ? 'page templates' : 'components'} —{' '}
               <Link href="/signin" className="underline underline-offset-2 hover:text-accent-h transition-colors">
                 sign up free
               </Link>{' '}
@@ -108,133 +145,201 @@ export default async function BrowsePage({ searchParams }: Props) {
           </div>
         )}
 
-        {/* Grid */}
-        {list.length === 0 ? (
-          <div className="rounded-xl border border-border bg-surface p-16 text-center">
-            <div className="w-12 h-12 rounded-full bg-accent-bg flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-accent">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
+        {/* Kits grid */}
+        {tab === 'kits' ? (
+          kitList.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface p-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-accent-bg flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-accent">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
+                </svg>
+              </div>
+              <p className="font-medium text-ink mb-1">No kits yet</p>
+              <p className="text-sm text-ink-3">
+                Kits are coming — be the first to create one from your dashboard.
+              </p>
             </div>
-            <p className="font-medium text-ink mb-1">No components found</p>
-            <p className="text-sm text-ink-3">
-              {category || tag ? 'Try adjusting your filters' : 'Be the first to share a Webflow component'}
-            </p>
-          </div>
-        ) : (
-          <div className="relative">
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {(isLoggedIn ? list : list.slice(0, GUEST_LIMIT)).map((c) => {
-              const profile = c.user_id ? profileMap[c.user_id] : null;
-              const displayName = profile?.display_name || profile?.username || 'Anonymous';
-              const username = profile?.username || null;
-
-              return (
-                <div key={c.id} className="group rounded-xl border border-border bg-surface hover:border-accent/40 hover:shadow-sm transition-all flex flex-col overflow-hidden">
-
-                  {/* Preview image */}
-                  <Link href={`/c/${c.slug}?ref=browse`} className="block">
-                    {c.image_url ? (
-                      <div className="relative w-full h-44 overflow-hidden bg-bg border-b border-border">
-                        <Image
-                          src={c.image_url}
-                          alt={c.name}
-                          fill
-                          className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-44 bg-accent-bg border-b border-border flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-accent/30">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3.75 3h16.5M21 3.75v13.5A2.25 2.25 0 0118.75 19.5H5.25A2.25 2.25 0 013 17.25V3.75" />
-                        </svg>
-                      </div>
-                    )}
-                  </Link>
-
-                  {/* Card body */}
-                  <div className="flex flex-col gap-3 p-4 flex-1">
-
-                    {/* Category + name */}
-                    <div>
-                      {c.category && (
-                        <span className="inline-block rounded-full bg-accent-bg px-2 py-0.5 text-xs font-medium text-accent capitalize mb-1.5">
-                          {c.category}
-                        </span>
-                      )}
-                      <Link href={`/c/${c.slug}?ref=browse`} className="block font-semibold text-ink text-sm leading-snug hover:text-accent transition-colors line-clamp-1">
-                        {c.name}
-                      </Link>
-                      {c.description && (
-                        <p className="mt-1 text-xs text-ink-2 line-clamp-2 leading-relaxed">{c.description}</p>
-                      )}
+              {kitList.map((k) => {
+                const profile = profileMap[k.user_id];
+                const displayName = profile?.display_name || profile?.username || 'Anonymous';
+                const username = profile?.username || null;
+                const componentCount = k.kit_components?.length ?? 0;
+                return (
+                  <a
+                    key={k.id}
+                    href={`/kit/${k.slug}`}
+                    className="group rounded-xl border border-border bg-surface hover:border-accent/40 hover:shadow-sm transition-all flex flex-col p-5 gap-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-ink text-sm leading-snug group-hover:text-accent transition-colors line-clamp-2">
+                        {k.name}
+                      </h3>
+                      <span className="shrink-0 rounded-full bg-accent-bg px-2 py-0.5 text-xs font-medium text-accent">
+                        {componentCount} component{componentCount !== 1 ? 's' : ''}
+                      </span>
                     </div>
-
-                    {/* Tags */}
-                    {c.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {c.tags.slice(0, 4).map((tag: string) => (
-                          <span key={tag} className="rounded bg-bg border border-border px-1.5 py-0.5 text-xs text-ink-3">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                    {k.description && (
+                      <p className="text-xs text-ink-2 line-clamp-2 leading-relaxed">{k.description}</p>
                     )}
-
-                    {/* Footer: author + copies */}
                     <div className="mt-auto pt-3 border-t border-border flex items-center justify-between gap-2">
                       {username ? (
-                        <Link
-                          href={`/u/${username}`}
-                          className="flex items-center gap-1.5 min-w-0 group/author"
-                        >
+                        <span className="flex items-center gap-1.5 min-w-0">
                           {profile?.avatar_url ? (
-                            <Image
-                              src={profile.avatar_url}
-                              alt={displayName}
-                              width={20}
-                              height={20}
-                              className="w-5 h-5 rounded-full object-cover shrink-0"
-                            />
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={profile.avatar_url} alt={displayName} className="w-5 h-5 rounded-full object-cover shrink-0" />
                           ) : (
                             <span className="w-5 h-5 rounded-full bg-accent-bg flex items-center justify-center text-accent text-xs font-semibold shrink-0">
                               {displayName[0]?.toUpperCase()}
                             </span>
                           )}
-                          <span className="text-xs text-ink-3 group-hover/author:text-accent transition-colors truncate">
-                            @{username}
-                          </span>
-                        </Link>
+                          <span className="text-xs text-ink-3 truncate">@{username}</span>
+                        </span>
                       ) : (
                         <span className="text-xs text-ink-3">Anonymous</span>
                       )}
-
                       <div className="flex items-center gap-1 text-xs text-ink-3 shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
                         </svg>
-                        {c.copy_count > 0 ? `${c.copy_count} cop${c.copy_count === 1 ? 'y' : 'ies'}` : 'New'}
+                        {k.copy_count > 0 ? `${k.copy_count} cop${k.copy_count === 1 ? 'y' : 'ies'}` : 'New'}
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          /* Components / Pages grid */
+          list.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface p-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-accent-bg flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-accent">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </div>
+              <p className="font-medium text-ink mb-1">No {tab === 'pages' ? 'page templates' : 'components'} found</p>
+              <p className="text-sm text-ink-3">
+                {category || tag ? 'Try adjusting your filters' : `Be the first to share a Webflow ${tab === 'pages' ? 'page template' : 'component'}`}
+              </p>
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {(isLoggedIn ? list : list.slice(0, GUEST_LIMIT)).map((c) => {
+                const profile = c.user_id ? profileMap[c.user_id] : null;
+                const displayName = profile?.display_name || profile?.username || 'Anonymous';
+                const username = profile?.username || null;
+
+                return (
+                  <div key={c.id} className="group rounded-xl border border-border bg-surface hover:border-accent/40 hover:shadow-sm transition-all flex flex-col overflow-hidden">
+
+                    {/* Preview image */}
+                    <Link href={`/c/${c.slug}?ref=browse`} className="block">
+                      {c.image_url ? (
+                        <div className="relative w-full h-44 overflow-hidden bg-bg border-b border-border">
+                          <Image
+                            src={c.image_url}
+                            alt={c.name}
+                            fill
+                            className="object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-44 bg-accent-bg border-b border-border flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-accent/30">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3.75 3h16.5M21 3.75v13.5A2.25 2.25 0 0118.75 19.5H5.25A2.25 2.25 0 013 17.25V3.75" />
+                          </svg>
+                        </div>
+                      )}
+                    </Link>
+
+                    {/* Card body */}
+                    <div className="flex flex-col gap-3 p-4 flex-1">
+
+                      {/* Category + name */}
+                      <div>
+                        {c.category && (
+                          <span className="inline-block rounded-full bg-accent-bg px-2 py-0.5 text-xs font-medium text-accent capitalize mb-1.5">
+                            {c.category}
+                          </span>
+                        )}
+                        <Link href={`/c/${c.slug}?ref=browse`} className="block font-semibold text-ink text-sm leading-snug hover:text-accent transition-colors line-clamp-1">
+                          {c.name}
+                        </Link>
+                        {c.description && (
+                          <p className="mt-1 text-xs text-ink-2 line-clamp-2 leading-relaxed">{c.description}</p>
+                        )}
+                      </div>
+
+                      {/* Tags */}
+                      {c.tags?.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {c.tags.slice(0, 4).map((tag: string) => (
+                            <span key={tag} className="rounded bg-bg border border-border px-1.5 py-0.5 text-xs text-ink-3">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Footer: author + copies */}
+                      <div className="mt-auto pt-3 border-t border-border flex items-center justify-between gap-2">
+                        {username ? (
+                          <Link
+                            href={`/u/${username}`}
+                            className="flex items-center gap-1.5 min-w-0 group/author"
+                          >
+                            {profile?.avatar_url ? (
+                              <Image
+                                src={profile.avatar_url}
+                                alt={displayName}
+                                width={20}
+                                height={20}
+                                className="w-5 h-5 rounded-full object-cover shrink-0"
+                              />
+                            ) : (
+                              <span className="w-5 h-5 rounded-full bg-accent-bg flex items-center justify-center text-accent text-xs font-semibold shrink-0">
+                                {displayName[0]?.toUpperCase()}
+                              </span>
+                            )}
+                            <span className="text-xs text-ink-3 group-hover/author:text-accent transition-colors truncate">
+                              @{username}
+                            </span>
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-ink-3">Anonymous</span>
+                        )}
+
+                        <div className="flex items-center gap-1 text-xs text-ink-3 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                          </svg>
+                          {c.copy_count > 0 ? `${c.copy_count} cop${c.copy_count === 1 ? 'y' : 'ies'}` : 'New'}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-          {!isLoggedIn && list.length > GUEST_LIMIT && (
-            <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-bg via-bg/80 to-transparent flex items-end justify-center pb-8">
-              <div className="text-center">
-                <p className="text-ink font-semibold mb-3">
-                  {list.length - GUEST_LIMIT} more component{list.length - GUEST_LIMIT !== 1 ? 's' : ''} available
-                </p>
-                <Link href="/signin" className="inline-flex items-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-6 py-3 text-sm transition-colors">
-                  Sign up free to see all
-                </Link>
-              </div>
+                );
+              })}
             </div>
-          )}
-        </div>
-      )}
+            {!isLoggedIn && list.length > GUEST_LIMIT && (
+              <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-bg via-bg/80 to-transparent flex items-end justify-center pb-8">
+                <div className="text-center">
+                  <p className="text-ink font-semibold mb-3">
+                    {list.length - GUEST_LIMIT} more {tab === 'pages' ? 'page template' : 'component'}{list.length - GUEST_LIMIT !== 1 ? 's' : ''} available
+                  </p>
+                  <Link href="/signin" className="inline-flex items-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-6 py-3 text-sm transition-colors">
+                    Sign up free to see all
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+        )}
       </main>
       <Footer />
     </div>
