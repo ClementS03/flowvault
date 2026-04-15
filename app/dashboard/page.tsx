@@ -7,18 +7,24 @@ import Footer from '@/components/Footer';
 import ComponentRow from '@/components/ComponentRow';
 import supabaseAdmin from '@/libs/supabaseAdmin';
 import UpgradeBanner from '@/components/UpgradeBanner';
+import KitDeleteButton from './KitDeleteButton';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
+interface Props {
+  searchParams: { tab?: string };
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
+  const activeTab = searchParams.tab === 'kits' ? 'kits' : 'components';
   // Session is already verified by layout.tsx — safe to assume it exists
   const supabase = createServerComponentClient({ cookies });
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) redirect('/signin');
   const userId = session.user.id;
 
-  // Parallel fetch: components + profile
-  const [{ data: components }, { data: profile }] = await Promise.all([
+  // Parallel fetch: components + profile + kits
+  const [{ data: components }, { data: profile }, { data: kits }] = await Promise.all([
     supabaseAdmin
       .from('components')
       .select('id, name, slug, category, description, tags, image_url, is_public, copy_count, created_at, json_path, moderation_status, moderation_note')
@@ -31,6 +37,12 @@ export default async function DashboardPage() {
       .select('plan, component_count, username')
       .eq('id', userId)
       .single(),
+
+    supabaseAdmin
+      .from('kits')
+      .select('id, name, slug, description, is_public, copy_count, created_at, kit_components(component_id)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false }),
   ]);
 
   // Generate signed URLs for each component (1h TTL)
@@ -124,43 +136,131 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Component list or empty state */}
-        {components && components.length > 0 ? (
-          <div className="rounded-xl border border-border bg-white">
-            {components.map((c) => (
-              <ComponentRow
-                key={c.id}
-                id={c.id}
-                name={c.name}
-                slug={c.slug}
-                category={c.category}
-                imageUrl={c.image_url}
-                isPublic={c.is_public}
-                copyCount={c.copy_count}
-                signedJsonUrl={signedUrls[c.id] ?? ''}
-                description={c.description}
-                tags={c.tags ?? []}
-                moderationStatus={c.moderation_status ?? null}
-                moderationNote={c.moderation_note ?? null}
-              />
-            ))}
+        {/* Tab nav */}
+        <div className="flex gap-2 mb-6">
+          <Link
+            href="/dashboard"
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === 'components'
+                ? 'bg-ink text-white'
+                : 'bg-surface border border-border text-ink-2 hover:border-accent/40 hover:text-ink'
+            }`}
+          >
+            Components
+          </Link>
+          <Link
+            href="/dashboard?tab=kits"
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === 'kits'
+                ? 'bg-ink text-white'
+                : 'bg-surface border border-border text-ink-2 hover:border-accent/40 hover:text-ink'
+            }`}
+          >
+            Kits
+          </Link>
+        </div>
+
+        {activeTab === 'kits' ? (
+          /* Kits tab */
+          <div>
+            <div className="flex justify-end mb-4">
+              <Link
+                href="/kit/new"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-2 text-sm transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                New kit
+              </Link>
+            </div>
+
+            {kits && kits.length > 0 ? (
+              <div className="rounded-xl border border-border bg-white divide-y divide-border">
+                {kits.map((kit) => {
+                  const componentCount = (kit.kit_components as { component_id: string }[] | null)?.length ?? 0;
+                  return (
+                    <div key={kit.id} className="flex items-center gap-4 px-5 py-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <Link href={`/kit/${kit.slug}`} className="font-medium text-sm text-ink hover:text-accent transition-colors line-clamp-1">
+                            {kit.name}
+                          </Link>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${kit.is_public ? 'bg-accent-bg text-accent' : 'bg-surface text-ink-3 border border-border'}`}>
+                            {kit.is_public ? 'Public' : 'Private'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-ink-3">
+                          {componentCount} component{componentCount !== 1 ? 's' : ''} · {kit.copy_count} cop{kit.copy_count === 1 ? 'y' : 'ies'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Link
+                          href={`/kit/${kit.slug}/edit`}
+                          className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink-2 hover:text-ink hover:border-accent/40 transition-colors"
+                        >
+                          Edit
+                        </Link>
+                        <KitDeleteButton kitId={kit.id} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-surface p-16 text-center">
+                <div className="w-12 h-12 rounded-full bg-accent-bg flex items-center justify-center mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-accent">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
+                  </svg>
+                </div>
+                <p className="font-medium text-ink mb-1">No kits yet</p>
+                <p className="text-sm text-ink-3 mb-6">Group your public components into shareable kits.</p>
+                <Link href="/kit/new" className="inline-flex items-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-2 text-sm transition-colors">
+                  Create your first kit
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-surface p-16 text-center">
-            <div className="w-12 h-12 rounded-full bg-accent-bg flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-accent">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
-              </svg>
+          /* Components tab */
+          components && components.length > 0 ? (
+            <div className="rounded-xl border border-border bg-white">
+              {components.map((c) => (
+                <ComponentRow
+                  key={c.id}
+                  id={c.id}
+                  name={c.name}
+                  slug={c.slug}
+                  category={c.category}
+                  imageUrl={c.image_url}
+                  isPublic={c.is_public}
+                  copyCount={c.copy_count}
+                  signedJsonUrl={signedUrls[c.id] ?? ''}
+                  description={c.description}
+                  tags={c.tags ?? []}
+                  moderationStatus={c.moderation_status ?? null}
+                  moderationNote={c.moderation_note ?? null}
+                />
+              ))}
             </div>
-            <p className="font-medium text-ink mb-1">No components yet</p>
-            <p className="text-sm text-ink-3 mb-6">Upload your first Webflow component to get started</p>
-            <Link
-              href="/upload"
-              className="inline-flex items-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-2 text-sm transition-colors"
-            >
-              Upload component
-            </Link>
-          </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-surface p-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-accent-bg flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-accent">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3" />
+                </svg>
+              </div>
+              <p className="font-medium text-ink mb-1">No components yet</p>
+              <p className="text-sm text-ink-3 mb-6">Upload your first Webflow component to get started</p>
+              <Link
+                href="/upload"
+                className="inline-flex items-center rounded-lg bg-accent hover:bg-accent-h text-white font-medium px-4 py-2 text-sm transition-colors"
+              >
+                Upload component
+              </Link>
+            </div>
+          )
         )}
       </main>
       <Footer />
