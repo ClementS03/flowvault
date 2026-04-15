@@ -8,13 +8,23 @@ import { createComponent } from '@/app/actions/createComponent';
 import { setUsername } from '@/app/actions/setUsername';
 import UpgradeModal from '@/components/UpgradeModal';
 
-const CATEGORIES = [
+const COMPONENT_CATEGORIES = [
   { value: 'hero', label: 'Hero' },
   { value: 'navbar', label: 'Navbar' },
   { value: 'pricing', label: 'Pricing' },
   { value: 'footer', label: 'Footer' },
   { value: 'feature', label: 'Feature' },
   { value: 'card', label: 'Card' },
+  { value: 'other', label: 'Other' },
+];
+
+const PAGE_CATEGORIES = [
+  { value: 'landing', label: 'Landing' },
+  { value: 'pricing-page', label: 'Pricing page' },
+  { value: 'blog', label: 'Blog' },
+  { value: 'portfolio', label: 'Portfolio' },
+  { value: 'saas', label: 'SaaS' },
+  { value: 'ecommerce', label: 'E-commerce' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -32,6 +42,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
   const [step, setStep] = useState<Step>('loading');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
+  const [itemType, setItemType] = useState<'component' | 'page_template'>('component');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,11 +124,12 @@ export default function UploadSlideOver({ json, onClose }: Props) {
     try {
       const formData = new FormData(e.currentTarget);
       formData.set('is_public', String(isPublic));
+      formData.set('type', itemType);
 
       // Validate category when making public
       const category = (formData.get('category') as string) || '';
       if (isPublic && !category) {
-        toast.error('A category is required to make a component public');
+        toast.error(`A category is required to make a ${itemType === 'page_template' ? 'page template' : 'component'} public`);
         setIsSubmitting(false);
         return;
       }
@@ -169,7 +181,11 @@ export default function UploadSlideOver({ json, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="font-heading font-semibold text-ink">
-            {step === 'set-username' ? 'Choose your username' : 'Configure your component'}
+            {step === 'set-username'
+              ? 'Choose your username'
+              : itemType === 'page_template'
+              ? 'Configure your page template'
+              : 'Configure your component'}
           </h2>
           <button
             type="button"
@@ -271,6 +287,32 @@ export default function UploadSlideOver({ json, onClose }: Props) {
             onSubmit={handleSubmit}
             className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5"
           >
+            {/* Type toggle */}
+            <div>
+              <label className="block text-sm font-medium text-ink mb-2">Type</label>
+              <div className="flex gap-2">
+                {(['component', 'page_template'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setItemType(t)}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      itemType === t
+                        ? 'border-accent bg-accent-bg text-accent'
+                        : 'border-border bg-surface text-ink-2 hover:border-accent/40'
+                    }`}
+                  >
+                    {t === 'component' ? 'Component' : 'Page Template'}
+                  </button>
+                ))}
+              </div>
+              {itemType === 'page_template' && (
+                <p className="mt-1.5 text-xs text-ink-3">
+                  Select all content on a Webflow page (Ctrl+A) before copying.
+                </p>
+              )}
+            </div>
+
             {/* Preview image */}
             <div>
               <label className="block text-sm font-medium text-ink mb-1.5">
@@ -356,7 +398,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
                   className="w-full rounded-lg border border-border bg-bg px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
                 >
                   <option value="" disabled>Select a category</option>
-                  {CATEGORIES.map((c) => (
+                  {(itemType === 'page_template' ? PAGE_CATEGORIES : COMPONENT_CATEGORIES).map((c) => (
                     <option key={c.value} value={c.value}>
                       {c.label}
                     </option>
@@ -439,7 +481,7 @@ export default function UploadSlideOver({ json, onClose }: Props) {
                     Saving…
                   </>
                 ) : isLoggedIn ? (
-                  'Publish component'
+                  itemType === 'page_template' ? 'Publish page template' : 'Publish component'
                 ) : (
                   'Get share link'
                 )}
