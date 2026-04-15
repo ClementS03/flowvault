@@ -37,5 +37,21 @@ export async function POST(
       .eq('id', id);
   }
 
+  // Increment kit copy_count if called from a kit page
+  const kitId = req.nextUrl.searchParams.get('kit_id');
+  if (kitId && UUID_RE.test(kitId)) {
+    const { data: kit } = await supabaseAdmin
+      .from('kits')
+      .select('copy_count')
+      .eq('id', kitId)
+      .single();
+    if (kit) {
+      await supabaseAdmin
+        .from('kits')
+        .update({ copy_count: (kit.copy_count ?? 0) + 1 })
+        .eq('id', kitId);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }
