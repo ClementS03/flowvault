@@ -31,6 +31,7 @@ export async function createComponent(
     .filter(Boolean)
     .slice(0, 5);
   const isPublic = formData.get('is_public') === 'true';
+  const type = (formData.get('type') as string) === 'page_template' ? 'page_template' : 'component';
   const passwordRaw = (formData.get('password') as string) || null;
   const imageFile = formData.get('preview_image') as File | null;
 
@@ -150,6 +151,7 @@ export async function createComponent(
     is_temporary: isTemporary,
     expires_at: expiresAt,
     copy_count: 0,
+    type,
   });
 
   if (insertError) {
